@@ -1,11 +1,12 @@
 import logging
 import pickle
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional, cast
 from urllib.parse import urlparse
 
 import curl_cffi
 from curl_cffi import AsyncSession
+from curl_cffi.requests import Response
 from curl_cffi.requests.exceptions import HTTPError
 
 from vinted_api_kit.client.user_agents import get_random_user_agent
@@ -52,7 +53,7 @@ class VintedHttpClient:
         self.persist_cookies = persist_cookies
         self._init_default_headers()
         if proxies:
-            self.session.proxies.update(proxies)
+            self.session.proxies.update(proxies)  # type: ignore[typeddict-item]
             ip = proxies.get("http", "").split("@")[-1].split(":")[0]
             self._set_x_forwarded_for(ip)
         elif client_ip:
@@ -130,7 +131,8 @@ class VintedHttpClient:
             return
         try:
             with self.cookies_path.open("wb") as f:
-                pickle.dump(self.session.cookies.jar._cookies, f)  # noqa
+                cookies_jar = cast(Any, self.session.cookies.jar)
+                pickle.dump(cookies_jar._cookies, f)  # noqa
                 logger.debug("Cookies saved successfully.")
         except Exception as e:
             logger.error(f"Failed to save cookies: {e}")
@@ -150,6 +152,8 @@ class VintedHttpClient:
         try:
             with self.cookies_path.open("rb") as f:
                 cookies = pickle.load(f)
+            if not isinstance(cookies, dict):
+                return None
             logger.debug("Cookies loaded successfully.")
             return cookies
         except Exception as e:
@@ -193,7 +197,7 @@ class VintedHttpClient:
         self,
         url: str,
         params: Optional[dict] = None,
-    ) -> curl_cffi.requests.Response:
+    ) -> Response:
         """
         Perform an async GET request with cookie and auth management.
 
@@ -208,17 +212,18 @@ class VintedHttpClient:
             HTTPError: If response code >= 400.
         """
         loaded_cookies = self.load_cookies()
+        cookies_jar = cast(Any, self.session.cookies.jar)
         if loaded_cookies:
-            self.session.cookies.jar._cookies.update(loaded_cookies)  # noqa
+            cookies_jar._cookies.update(loaded_cookies)  # noqa
         else:
             await self.refresh_session_cookies()
             loaded_cookies = self.load_cookies()
             if loaded_cookies:
-                self.session.cookies.jar._cookies.update(loaded_cookies)  # noqa
+                cookies_jar._cookies.update(loaded_cookies)  # noqa
 
         self._update_auth_headers_from_cookies()
 
-        response = await self.session.get(
+        response: Response = await self.session.get(
             url=url,
             params=params,
             impersonate="chrome",
@@ -229,7 +234,7 @@ class VintedHttpClient:
             await self.refresh_session_cookies()
             loaded_cookies = self.load_cookies()
             if loaded_cookies:
-                self.session.cookies.jar._cookies.update(loaded_cookies)  # noqa
+                cookies_jar._cookies.update(loaded_cookies)  # noqa
             response = await self.session.get(
                 url=url,
                 params=params,
@@ -240,7 +245,7 @@ class VintedHttpClient:
         if response.status_code >= 400:
             raise HTTPError(
                 f"HTTP Error {response.status_code}: {response.reason}",
-                code=response.status_code,
+                code=response.status_code,  # type: ignore[arg-type]
                 response=response,
             )
 
