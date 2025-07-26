@@ -1,6 +1,5 @@
 import logging
 import pickle
-import time
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
@@ -25,12 +24,12 @@ class VintedHttpClient:
     """
 
     def __init__(
-            self,
-            locale: Optional[str] = None,
-            proxies: Optional[dict[str, str]] = None,
-            client_ip: Optional[str] = None,
-            cookies_dir: Optional[Path] = None,
-            persist_cookies: bool = True,
+        self,
+        locale: Optional[str] = None,
+        proxies: Optional[dict[str, str]] = None,
+        client_ip: Optional[str] = None,
+        cookies_dir: Optional[Path] = None,
+        persist_cookies: bool = True,
     ):
         """
         Initialize the HTTP client with optional locale, proxies, client IP and cookie handling.
@@ -47,14 +46,14 @@ class VintedHttpClient:
         self.client_ip = client_ip
         self.base_url: Optional[str] = None
         self.session: AsyncSession = curl_cffi.AsyncSession()
-        self.cookies_dir = cookies_dir or Path('.')
+        self.cookies_dir = cookies_dir or Path(".")
         self.cookies_dir.mkdir(parents=True, exist_ok=True)
         self.cookies_path = self._generate_cookies_path()
         self.persist_cookies = persist_cookies
         self._init_default_headers()
         if proxies:
             self.session.proxies.update(proxies)
-            ip = proxies.get('http', '').split('@')[-1].split(':')[0]
+            ip = proxies.get("http", "").split("@")[-1].split(":")[0]
             self._set_x_forwarded_for(ip)
         elif client_ip:
             self._set_x_forwarded_for(client_ip)
@@ -67,18 +66,18 @@ class VintedHttpClient:
             Path object representing cookies file location.
         """
         if self.proxies:
-            proxy_str = self.proxies.get('http') or self.proxies.get('https')
+            proxy_str = self.proxies.get("http") or self.proxies.get("https")
             if proxy_str:
                 proxy_uri = urlparse(proxy_str)
-                ip = proxy_uri.hostname or 'unknown'
+                ip = proxy_uri.hostname or "unknown"
                 port = proxy_uri.port or 0
-                filename = f'cookies_{ip}_{port}.pk'
+                filename = f"cookies_{ip}_{port}.pk"
                 return self.cookies_dir / filename
         if self.client_ip:
-            ip_safe = self.client_ip.replace(':', '_')
-            filename = f'cookies_{ip_safe}.pk'
+            ip_safe = self.client_ip.replace(":", "_")
+            filename = f"cookies_{ip_safe}.pk"
             return self.cookies_dir / filename
-        return self.cookies_dir / 'cookies.pk'
+        return self.cookies_dir / "cookies.pk"
 
     def _init_default_headers(self):
         """
@@ -86,19 +85,19 @@ class VintedHttpClient:
         """
         self.session.headers.update(
             {
-                'User-Agent': get_random_user_agent(),
-                'Accept': 'application/json, text/plain, */*',
-                'Accept-Encoding': 'gzip, deflate, br, zstd',
-                'cache-control': 'max-age=0',
-                'DNT': '1',
-                'Referer': '',
-                'Sec-CH-UA': '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
-                'Sec-CH-UA-Mobile': '?0',
-                'Sec-CH-UA-Platform': '"macOS"',
-                'Sec-Fetch-Dest': 'empty',
-                'Sec-Fetch-Mode': 'cors',
-                'Sec-Fetch-Site': 'same-origin',
-                'X-Money-Object': 'true',
+                "User-Agent": get_random_user_agent(),
+                "Accept": "application/json, text/plain, */*",
+                "Accept-Encoding": "gzip, deflate, br, zstd",
+                "cache-control": "max-age=0",
+                "DNT": "1",
+                "Referer": "",
+                "Sec-CH-UA": '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+                "Sec-CH-UA-Mobile": "?0",
+                "Sec-CH-UA-Platform": '"macOS"',
+                "Sec-Fetch-Dest": "empty",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Site": "same-origin",
+                "X-Money-Object": "true",
             }
         )
 
@@ -106,7 +105,7 @@ class VintedHttpClient:
         """
         Set 'X-Forwarded-For' HTTP header to the specified IP.
         """
-        self.session.headers.update({'X-Forwarded-For': ip})
+        self.session.headers.update({"X-Forwarded-For": ip})
 
     def configure_from_url(self, url: str) -> None:
         """
@@ -116,12 +115,12 @@ class VintedHttpClient:
             url (str): URL string to parse.
         """
         parsed_url = urlparse(url)
-        self.base_url = f'https://{parsed_url.netloc}'
+        self.base_url = f"https://{parsed_url.netloc}"
         if not self.locale:
-            domain_parts = parsed_url.netloc.split('.')
+            domain_parts = parsed_url.netloc.split(".")
             if len(domain_parts) > 1:
                 self.locale = domain_parts[-1]
-        self.session.headers.update({'Referer': self.base_url})
+        self.session.headers.update({"Referer": self.base_url})
 
     def save_cookies(self) -> None:
         """
@@ -130,11 +129,11 @@ class VintedHttpClient:
         if not self.persist_cookies:
             return
         try:
-            with self.cookies_path.open('wb') as f:
+            with self.cookies_path.open("wb") as f:
                 pickle.dump(self.session.cookies.jar._cookies, f)  # noqa
-                logger.debug('Cookies saved successfully.')
+                logger.debug("Cookies saved successfully.")
         except Exception as e:
-            logger.error(f'Failed to save cookies: {e}')
+            logger.error(f"Failed to save cookies: {e}")
 
     def load_cookies(self) -> Optional[dict]:
         """
@@ -146,16 +145,15 @@ class VintedHttpClient:
         if not self.persist_cookies:
             return None
         if not self.cookies_path.is_file():
-            logger.debug('Cookies file does not exist.')
+            logger.debug("Cookies file does not exist.")
             return None
         try:
-            start_t = time.perf_counter()
-            with self.cookies_path.open('rb') as f:
+            with self.cookies_path.open("rb") as f:
                 cookies = pickle.load(f)
-            logger.debug('Cookies loaded successfully.')
+            logger.debug("Cookies loaded successfully.")
             return cookies
         except Exception as e:
-            logger.error(f'Failed to load cookies: {e}')
+            logger.error(f"Failed to load cookies: {e}")
             return None
 
     async def refresh_session_cookies(self) -> None:
@@ -163,38 +161,38 @@ class VintedHttpClient:
         Refresh session cookies by making a HEAD request to base URL.
         """
         if not self.base_url:
-            raise ValueError('base_url is not configured')
+            raise ValueError("base_url is not configured")
         try:
             response = await self.session.head(self.base_url)
             response.raise_for_status()
             self.save_cookies()
-            logger.info('Session cookies refreshed.')
+            logger.info("Session cookies refreshed.")
         except Exception as e:
-            logger.error(f'Failed to refresh session cookies: {e}')
+            logger.error(f"Failed to refresh session cookies: {e}")
 
     def _update_auth_headers_from_cookies(self) -> None:
         """
         Update authentication and related headers from stored cookies.
         """
         cookies = self.session.cookies
-        access_token_web = cookies.get('access_token_web')
-        csrf_token = cookies.get('x-csrf-token')
-        anon_id = cookies.get('anon_id')
-        accept_language = cookies.get('anonymous-locale')
+        access_token_web = cookies.get("access_token_web")
+        csrf_token = cookies.get("x-csrf-token")
+        anon_id = cookies.get("anon_id")
+        accept_language = cookies.get("anonymous-locale")
 
         if csrf_token:
-            self.session.headers.update({'X-Csrf-Token': csrf_token})
+            self.session.headers.update({"X-Csrf-Token": csrf_token})
         if access_token_web:
-            self.session.headers.update({'Authorization': f'Bearer {access_token_web}'})
+            self.session.headers.update({"Authorization": f"Bearer {access_token_web}"})
         if anon_id:
-            self.session.headers.update({'X-Anon-Id': anon_id})
+            self.session.headers.update({"X-Anon-Id": anon_id})
         if accept_language:
-            self.session.headers.update({'Accept-Language': accept_language})
+            self.session.headers.update({"Accept-Language": accept_language})
 
     async def request(
-            self,
-            url: str,
-            params: Optional[dict] = None,
+        self,
+        url: str,
+        params: Optional[dict] = None,
     ) -> curl_cffi.requests.Response:
         """
         Perform an async GET request with cookie and auth management.
@@ -223,7 +221,7 @@ class VintedHttpClient:
         response = await self.session.get(
             url=url,
             params=params,
-            impersonate='chrome',
+            impersonate="chrome",
             verify=False,
         )
 
@@ -235,13 +233,15 @@ class VintedHttpClient:
             response = await self.session.get(
                 url=url,
                 params=params,
-                impersonate='chrome',
+                impersonate="chrome",
                 verify=False,
             )
 
         if response.status_code >= 400:
             raise HTTPError(
-                f'HTTP Error {response.status_code}: {response.reason}', code=response.status_code, response=response
+                f"HTTP Error {response.status_code}: {response.reason}",
+                code=response.status_code,
+                response=response,
             )
 
         return response
