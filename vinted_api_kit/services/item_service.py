@@ -31,8 +31,8 @@ class ItemService:
         page: int = 1,
         timestamp: Optional[int] = None,
         raw_data: bool = False,
-        order: str = None,
-    ) -> Union[list[CatalogItem], list, None]:
+        order: Optional[str] = None,
+    ) -> Union[list[CatalogItem], list[dict], None]:
         """
         Search items on Vinted.
 
@@ -62,7 +62,9 @@ class ItemService:
         items = data.get("items", [])
 
         if raw_data:
-            return items
+            from typing import Any, cast
+
+            return cast(list[dict[str, Any]], items)
         return [CatalogItem(item) for item in items] if items else []
 
     async def get_item_details(

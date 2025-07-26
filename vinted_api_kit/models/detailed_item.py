@@ -50,16 +50,23 @@ class DetailedItem:
         self.id = data.get("id")
         self.title = data.get("title")
         self.description = data.get("description")
-        self.brand_title = data.get("brand_dto").get("title")
-        self.brand_slug = data.get("brand_dto").get("slug")
+        brand_dto = data.get("brand_dto") or {}
+        self.brand_title = brand_dto.get("title")
+        self.brand_slug = brand_dto.get("slug")
         self.size_title = self._get_size_title(data)
-        self.currency = data.get("price").get("currency_code")
-        self.price = data.get("price").get("amount")
-        self.total_item_price = data.get("total_item_price").get("amount")
+        price_data = data.get("price") or {}
+        self.currency = price_data.get("currency_code")
+        self.price = price_data.get("amount")
+        total_item_price_data = data.get("total_item_price") or {}
+        self.total_item_price = total_item_price_data.get("amount")
         self.photo = self._get_first_photo_url(data)
         self.url = data.get("url")
         self.created_at_ts = self._get_created_at_ts(data)
-        self.raw_timestamp = data.get("photos")[0].get("high_resolution").get("timestamp")
+        photos = data.get("photos") or []
+        if photos and photos[0] and isinstance(photos[0], dict):
+            self.raw_timestamp = (photos[0].get("high_resolution") or {}).get("timestamp")
+        else:
+            self.raw_timestamp = None
 
     @staticmethod
     def _get_size_title(data: dict) -> str:
@@ -80,7 +87,8 @@ class DetailedItem:
             if plugin.get("name") == "attributes":
                 for attr in plugin.get("data", {}).get("attributes", []):
                     if attr.get("code") == "size":
-                        return attr.get("data", {}).get("value", "")
+                        val = attr.get("data", {}).get("value", "")
+                        return str(val) if val is not None else ""
         return ""
 
     @staticmethod
