@@ -8,12 +8,7 @@ class VintedApi:
     """
 
     def __init__(
-            self,
-            locale=None,
-            proxies=None,
-            client_ip=None,
-            cookies_dir=None,
-            persist_cookies=False
+        self, locale=None, proxies=None, client_ip=None, cookies_dir=None, persist_cookies=False
     ):
         """
         Initialize VintedApi with client configuration.
@@ -30,7 +25,7 @@ class VintedApi:
             proxies=proxies,
             client_ip=client_ip,
             cookies_dir=cookies_dir,
-            persist_cookies=persist_cookies
+            persist_cookies=persist_cookies,
         )
         self._items_service = ItemService(self._client)
 

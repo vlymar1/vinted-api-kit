@@ -1,6 +1,6 @@
 import time
 from typing import Optional, Union
-from urllib.parse import urlparse, parse_qsl
+from urllib.parse import parse_qsl, urlparse
 
 from curl_cffi.requests.exceptions import HTTPError
 
@@ -12,7 +12,8 @@ class ItemService:
     """
     Provides item-related operations using the VintedHttpClient.
     """
-    VALID_ORDERS = {'newest_first', 'relevance', 'price_high_to_low', 'price_low_to_high'}
+
+    VALID_ORDERS = {"newest_first", "relevance", "price_high_to_low", "price_low_to_high"}
 
     def __init__(self, client: VintedHttpClient):
         """
@@ -24,13 +25,13 @@ class ItemService:
         self.client = client
 
     async def search_items(
-            self,
-            url: str,
-            per_page: int = 20,
-            page: int = 1,
-            timestamp: Optional[int] = None,
-            raw_data: bool = False,
-            order: str = None
+        self,
+        url: str,
+        per_page: int = 20,
+        page: int = 1,
+        timestamp: Optional[int] = None,
+        raw_data: bool = False,
+        order: str = None,
     ) -> Union[list[CatalogItem], list, None]:
         """
         Search items on Vinted.
@@ -47,22 +48,26 @@ class ItemService:
             List of CatalogItem or raw data list.
         """
         if order and order not in self.VALID_ORDERS:
-            raise ValueError(f"Invalid order '{order}'. Valid options are: {', '.join(self.VALID_ORDERS)}")
+            raise ValueError(
+                f"Invalid order '{order}'. Valid options are: {', '.join(self.VALID_ORDERS)}"
+            )
         self.client.configure_from_url(url)
-        api_url = f'{self.client.base_url}/api/v2/catalog/items'
+        api_url = f"{self.client.base_url}/api/v2/catalog/items"
         params = self._parse_url(url, per_page=per_page, page=page)
-        params['time'] = timestamp or int(time.time())
+        params["time"] = timestamp or int(time.time())
         if order:
-            params['order'] = order
+            params["order"] = order
         response = await self.client.request(api_url, params=params)
         data = response.json()
-        items = data.get('items', [])
+        items = data.get("items", [])
 
         if raw_data:
             return items
         return [CatalogItem(item) for item in items] if items else []
 
-    async def get_item_details(self, url: str, raw_data: bool = False) -> Union[DetailedItem, dict]:
+    async def get_item_details(
+        self, url: str, raw_data: bool = False
+    ) -> Union[DetailedItem, dict]:
         """
         Get detailed info of an item by URL.
 
@@ -74,14 +79,14 @@ class ItemService:
             DetailedItem instance or raw dict.
         """
         self.client.configure_from_url(url)
-        product_id = urlparse(url).path.split('/')[2].split('-')[0]
-        api_url = f'{self.client.base_url}/api/v2/items/{product_id}/details'
+        product_id = urlparse(url).path.split("/")[2].split("-")[0]
+        api_url = f"{self.client.base_url}/api/v2/items/{product_id}/details"
 
         try:
             response = await self.client.request(api_url)
             response.raise_for_status()
             data = response.json()
-            product_data = data.get('item', [])
+            product_data = data.get("item", [])
             return DetailedItem(product_data) if not raw_data else product_data
         except HTTPError as err:
             raise err
@@ -102,26 +107,28 @@ class ItemService:
         query_params = parse_qsl(parsed_url.query)
 
         catalog_id = self._extract_catalog_id(parsed_url.path)
-        catalog_ids_from_query = self._join_query_values(query_params, 'catalog[]')
+        catalog_ids_from_query = self._join_query_values(query_params, "catalog[]")
 
         params = {
-            'search_text': '+'.join(self._extract_query_values(query_params, 'search_text')),
-            'catalog_ids': str(catalog_id) if catalog_id is not None else catalog_ids_from_query,
-            'color_ids': self._join_query_values(query_params, 'color_ids[]'),
-            'brand_ids': self._join_query_values(query_params, 'brand_ids[]'),
-            'size_ids': self._join_query_values(query_params, 'size_ids[]'),
-            'material_ids': self._join_query_values(query_params, 'material_ids[]'),
-            'status_ids': self._join_query_values(query_params, 'status[]'),
-            'country_ids': self._join_query_values(query_params, 'country_ids[]'),
-            'city_ids': self._join_query_values(query_params, 'city_ids[]'),
-            'is_for_swap': ','.join('1' for _ in self._extract_query_values(query_params, 'disposal[]')),
-            'currency': self._join_query_values(query_params, 'currency'),
-            'price_to': self._join_query_values(query_params, 'price_to'),
-            'price_from': self._join_query_values(query_params, 'price_from'),
-            'page': page,
-            'per_page': per_page,
-            'order': self._join_query_values(query_params, 'order'),
-            'time': int(time.time()),
+            "search_text": "+".join(self._extract_query_values(query_params, "search_text")),
+            "catalog_ids": str(catalog_id) if catalog_id is not None else catalog_ids_from_query,
+            "color_ids": self._join_query_values(query_params, "color_ids[]"),
+            "brand_ids": self._join_query_values(query_params, "brand_ids[]"),
+            "size_ids": self._join_query_values(query_params, "size_ids[]"),
+            "material_ids": self._join_query_values(query_params, "material_ids[]"),
+            "status_ids": self._join_query_values(query_params, "status[]"),
+            "country_ids": self._join_query_values(query_params, "country_ids[]"),
+            "city_ids": self._join_query_values(query_params, "city_ids[]"),
+            "is_for_swap": ",".join(
+                "1" for _ in self._extract_query_values(query_params, "disposal[]")
+            ),
+            "currency": self._join_query_values(query_params, "currency"),
+            "price_to": self._join_query_values(query_params, "price_to"),
+            "price_from": self._join_query_values(query_params, "price_from"),
+            "page": page,
+            "per_page": per_page,
+            "order": self._join_query_values(query_params, "order"),
+            "time": int(time.time()),
         }
 
         params_cleaned = {k: v for k, v in params.items() if v}
@@ -138,10 +145,10 @@ class ItemService:
         Returns:
             Catalog ID as int or None if missing.
         """
-        path_parts = path.split('/')
-        if len(path_parts) > 2 and path_parts[1] == 'catalog':
+        path_parts = path.split("/")
+        if len(path_parts) > 2 and path_parts[1] == "catalog":
             catalog_part = path_parts[2]
-            catalog_id_str = catalog_part.split('-')[0] if '-' in catalog_part else catalog_part
+            catalog_id_str = catalog_part.split("-")[0] if "-" in catalog_part else catalog_part
             try:
                 return int(catalog_id_str)
             except ValueError:
@@ -160,7 +167,7 @@ class ItemService:
             Product ID string.
         """
         path = urlparse(url).path
-        return path.split('/')[2].split('-')[0]
+        return path.split("/")[2].split("-")[0]
 
     @staticmethod
     def _extract_query_values(query_params: list[tuple[str, str]], key: str) -> list[str]:
@@ -176,7 +183,9 @@ class ItemService:
         """
         return [v for k, v in query_params if k == key]
 
-    def _join_query_values(self, query_params: list[tuple[str, str]], key: str, sep: str = ',') -> str:
+    def _join_query_values(
+        self, query_params: list[tuple[str, str]], key: str, sep: str = ","
+    ) -> str:
         """
         Join multiple query values for a key into a string.
 

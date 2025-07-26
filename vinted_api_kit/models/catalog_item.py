@@ -41,16 +41,16 @@ class CatalogItem:
             Raw catalog item data.
         """
         self.raw_data = data
-        self.id = data.get('id')
-        self.title = data.get('title')
-        self.brand_title = data.get('brand_title')
-        self.size_title = data.get('size_title')
-        self.currency = data.get('price').get('currency_code')
-        self.price = data.get('price').get('amount')
-        self.photo = data.get('photo').get('url')
-        self.url = data.get('url')
+        self.id = data.get("id")
+        self.title = data.get("title")
+        self.brand_title = data.get("brand_title")
+        self.size_title = data.get("size_title")
+        self.currency = data.get("price").get("currency_code")
+        self.price = data.get("price").get("amount")
+        self.photo = data.get("photo").get("url")
+        self.url = data.get("url")
         self.created_at_ts = self._get_created_at_ts(data)
-        self.raw_timestamp = data.get('photo').get('high_resolution').get('timestamp')
+        self.raw_timestamp = data.get("photo").get("high_resolution").get("timestamp")
 
     @staticmethod
     def _get_created_at_ts(data: dict) -> datetime:
@@ -67,8 +67,12 @@ class CatalogItem:
         datetime
             UTC creation datetime or current time if unavailable.
         """
-        timestamp = data.get('photos', {}).get('high_resolution', {}).get('timestamp', 0)
-        return datetime.fromtimestamp(timestamp, tz=timezone.utc) if timestamp else datetime.now(tz=timezone.utc)
+        timestamp = data.get("photos", {}).get("high_resolution", {}).get("timestamp", 0)
+        return (
+            datetime.fromtimestamp(timestamp, tz=timezone.utc)
+            if timestamp
+            else datetime.now(tz=timezone.utc)
+        )
 
     def __eq__(self, other):
         """Items are equal if IDs match."""
@@ -76,7 +80,7 @@ class CatalogItem:
 
     def __hash__(self):
         """Hash based on unique ID."""
-        return hash(('id', self.id))
+        return hash(("id", self.id))
 
     def is_new_item(self, minutes=1):
         """

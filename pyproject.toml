@@ -1,0 +1,84 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vinted-api-kit"
+version = "0.1.0"
+description = "Lightweight asynchronous Python client library for accessing Vinted API and scraping item data."
+authors = [
+    {name = "Lymar Volodymyr",email = "volodymyr.lymar1@gmail.com"},
+]
+maintainers = [
+    {name = "Lymar Volodymyr",email = "volodymyr.lymar1@gmail.com"},
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "curl-cffi (>=0.12.0,<0.13.0)"
+]
+
+keywords = ["python", "async", "vinted", "api", "web-scraping", "ecommerce"]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Typing :: Typed",
+    "Framework :: AsyncIO",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content :: APIs",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Utilities",
+    "Topic :: Communications",
+]
+
+[project.urls]
+Homepage = "https://github.com/vlymar-dev/vinted-api-kit"
+Documentation = "https://github.com/vlymar-dev/vinted-api-kit"
+Repository = "https://github.com/vlymar-dev/vinted-api-kit"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.12.5"
+pre-commit = "^4.2.0"
+
+[tool.ruff]
+exclude = [
+    ".git",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "dev/",
+]
+line-length = 99
+indent-width = 4
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E4", "E7", "E9", "F",
+    "I001",
+    "I002",
+    "T201",
+]
+ignore = ["F821"]
+fixable = ["ALL"]
+unfixable = []
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

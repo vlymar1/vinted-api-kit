@@ -47,19 +47,19 @@ class DetailedItem:
             Raw response data from Vinted API.
         """
         self.raw_data = data
-        self.id = data.get('id')
-        self.title = data.get('title')
-        self.description = data.get('description')
-        self.brand_title = data.get('brand_dto').get('title')
-        self.brand_slug = data.get('brand_dto').get('slug')
+        self.id = data.get("id")
+        self.title = data.get("title")
+        self.description = data.get("description")
+        self.brand_title = data.get("brand_dto").get("title")
+        self.brand_slug = data.get("brand_dto").get("slug")
         self.size_title = self._get_size_title(data)
-        self.currency = data.get('price').get('currency_code')
-        self.price = data.get('price').get('amount')
-        self.total_item_price = data.get('total_item_price').get('amount')
+        self.currency = data.get("price").get("currency_code")
+        self.price = data.get("price").get("amount")
+        self.total_item_price = data.get("total_item_price").get("amount")
         self.photo = self._get_first_photo_url(data)
-        self.url = data.get('url')
+        self.url = data.get("url")
         self.created_at_ts = self._get_created_at_ts(data)
-        self.raw_timestamp = data.get('photos')[0].get('high_resolution').get('timestamp')
+        self.raw_timestamp = data.get("photos")[0].get("high_resolution").get("timestamp")
 
     @staticmethod
     def _get_size_title(data: dict) -> str:
@@ -76,12 +76,12 @@ class DetailedItem:
         str
             Size label or empty string if not found.
         """
-        for plugin in data.get('plugins', []):
-            if plugin.get('name') == 'attributes':
-                for attr in plugin.get('data', {}).get('attributes', []):
-                    if attr.get('code') == 'size':
-                        return attr.get('data', {}).get('value', '')
-        return ''
+        for plugin in data.get("plugins", []):
+            if plugin.get("name") == "attributes":
+                for attr in plugin.get("data", {}).get("attributes", []):
+                    if attr.get("code") == "size":
+                        return attr.get("data", {}).get("value", "")
+        return ""
 
     @staticmethod
     def _get_first_photo_url(data: dict) -> str:
@@ -98,8 +98,8 @@ class DetailedItem:
         str
             URL string or empty if missing.
         """
-        photos = data.get('photos', [])
-        return photos[0].get('url', '') if photos else ''
+        photos = data.get("photos", [])
+        return photos[0].get("url", "") if photos else ""
 
     @staticmethod
     def _get_created_at_ts(data: dict) -> datetime:
@@ -116,8 +116,12 @@ class DetailedItem:
         datetime
             UTC datetime of creation or current time if missing.
         """
-        timestamp = data.get('photos', [{}])[0].get('high_resolution', {}).get('timestamp', 0)
-        return datetime.fromtimestamp(timestamp, tz=timezone.utc) if timestamp else datetime.now(tz=timezone.utc)
+        timestamp = data.get("photos", [{}])[0].get("high_resolution", {}).get("timestamp", 0)
+        return (
+            datetime.fromtimestamp(timestamp, tz=timezone.utc)
+            if timestamp
+            else datetime.now(tz=timezone.utc)
+        )
 
     def __eq__(self, other):
         """Compare equality by item ID."""
@@ -125,4 +129,4 @@ class DetailedItem:
 
     def __hash__(self):
         """Hash by item ID."""
-        return hash(('id', self.id))
+        return hash(("id", self.id))
