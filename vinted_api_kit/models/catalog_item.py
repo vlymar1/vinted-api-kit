@@ -45,12 +45,15 @@ class CatalogItem:
         self.title = data.get("title")
         self.brand_title = data.get("brand_title")
         self.size_title = data.get("size_title")
-        self.currency = data.get("price").get("currency_code")
-        self.price = data.get("price").get("amount")
-        self.photo = data.get("photo").get("url")
+        price = data.get("price") or {}
+        self.currency = price.get("currency_code")
+        self.price = price.get("amount")
+        photo = data.get("photo") or {}
+        self.photo = photo.get("url")
         self.url = data.get("url")
         self.created_at_ts = self._get_created_at_ts(data)
-        self.raw_timestamp = data.get("photo").get("high_resolution").get("timestamp")
+        high_res = photo.get("high_resolution") or {}
+        self.raw_timestamp = high_res.get("timestamp")
 
     @staticmethod
     def _get_created_at_ts(data: dict) -> datetime:
@@ -67,12 +70,11 @@ class CatalogItem:
         datetime
             UTC creation datetime or current time if unavailable.
         """
-        timestamp = data.get("photos", {}).get("high_resolution", {}).get("timestamp", 0)
-        return (
-            datetime.fromtimestamp(timestamp, tz=timezone.utc)
-            if timestamp
-            else datetime.now(tz=timezone.utc)
-        )
+        photo = data.get("photo") or {}
+        high_res = photo.get("high_resolution") or {}
+        timestamp = high_res.get("timestamp", 0)
+
+        return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
     def __eq__(self, other):
         """Items are equal if IDs match."""

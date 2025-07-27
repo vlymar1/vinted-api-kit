@@ -1,4 +1,7 @@
+from typing import Optional, Union
+
 from vinted_api_kit.client import VintedHttpClient
+from vinted_api_kit.models import CatalogItem, DetailedItem
 from vinted_api_kit.services import ItemService
 
 
@@ -50,14 +53,44 @@ class VintedApi:
         await self._client.close()
         return False
 
-    async def search_items(self, *args, **kwargs):
+    async def search_items(
+        self,
+        url: str,
+        per_page: int = 20,
+        page: int = 1,
+        timestamp: Optional[int] = None,
+        raw_data: bool = False,
+        order: Optional[str] = None,
+    ) -> Union[list[CatalogItem], list[dict], None]:
         """
-        Search items on Vinted (convenience wrapper).
-        """
-        return await self._items_service.search_items(*args, **kwargs)
+        Search items on Vinted.
 
-    async def get_item_details(self, *args, **kwargs):
+        Args:
+            url (str): URL with search filters.
+            per_page (int): Items per page.
+            page (int): Page number.
+            timestamp (Optional[int]): Unix timestamp override.
+            raw_data (bool): Return raw JSON data if True.
+            order (str): Sorting order.
+
+        Returns:
+            List of CatalogItem or raw data list.
         """
-        Get detailed item info (convenience wrapper).
+        return await self._items_service.search_items(
+            url, per_page, page, timestamp, raw_data, order
+        )
+
+    async def get_item_details(
+        self, url: str, raw_data: bool = False
+    ) -> Union[DetailedItem, dict]:
         """
-        return await self._items_service.get_item_details(*args, **kwargs)
+        Get detailed information of an item by URL.
+
+        Args:
+            url (str): Item URL.
+            raw_data (bool): Return raw JSON if True.
+
+        Returns:
+            DetailedItem or raw dict.
+        """
+        return await self._items_service.get_item_details(url, raw_data)
