@@ -50,6 +50,11 @@ Repository = "https://github.com/vlymar-dev/vinted-api-kit"
 ruff = "^0.12.5"
 pre-commit = "^4.2.0"
 mypy = "^1.17.0"
+pytest = "^8.4.1"
+pytest-cov = "^6.2.1"
+pytest-asyncio = "^1.1.0"
+pytest-html = "^4.1.1"
+pytest-mock = "^3.14.1"
 
 [tool.ruff]
 exclude = [
@@ -100,4 +105,12 @@ exclude = [
     ".venv/",
     "build",
     "dist/",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "--cov-branch --cov-fail-under=80"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = [
+    "tests",
 ]
