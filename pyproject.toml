@@ -19,7 +19,7 @@ dependencies = [
     "curl-cffi (>=0.12.0,<0.13.0)"
 ]
 
-keywords = ["python", "async", "vinted", "api", "web-scraping", "ecommerce"]
+keywords = ["python", "async", "vinted", "api", "vinted-api", "web-scraping", "ecommerce"]
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -35,7 +35,6 @@ classifiers = [
     "Typing :: Typed",
     "Framework :: AsyncIO",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Internet :: WWW/HTTP :: Dynamic Content :: APIs",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Utilities",
     "Topic :: Communications",
@@ -55,6 +54,7 @@ pytest-cov = "^6.2.1"
 pytest-asyncio = "^1.1.0"
 pytest-html = "^4.1.1"
 pytest-mock = "^3.14.1"
+tox = "^4.28.3"
 
 [tool.ruff]
 exclude = [
