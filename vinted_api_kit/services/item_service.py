@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import Optional, Union
 from urllib.parse import parse_qsl, urlparse
@@ -6,6 +7,8 @@ from curl_cffi.requests.exceptions import HTTPError
 
 from vinted_api_kit.client import VintedHttpClient
 from vinted_api_kit.models import CatalogItem, DetailedItem
+
+logger = logging.getLogger(__name__)
 
 
 class ItemService:
@@ -47,25 +50,44 @@ class ItemService:
         Returns:
             List of CatalogItem or raw data list.
         """
+        logger.debug(
+            "Searching items with url=%s, per_page=%d, page=%d, timestamp=%s, raw_data=%s, order=%s",
+            url,
+            per_page,
+            page,
+            timestamp,
+            raw_data,
+            order,
+        )
         if order and order not in self.VALID_ORDERS:
+            logger.error(
+                "Invalid order parameter '%s'. Valid options: %s",
+                order,
+                ", ".join(self.VALID_ORDERS),
+            )
             raise ValueError(
                 f"Invalid order '{order}'. Valid options are: {', '.join(self.VALID_ORDERS)}"
             )
-        self.client.configure_from_url(url)
-        api_url = f"{self.client.base_url}/api/v2/catalog/items"
-        params = self._parse_url(url, per_page=per_page, page=page)
-        params["time"] = timestamp or int(time.time())
-        if order:
-            params["order"] = order
-        response = await self.client.request(api_url, params=params)
-        data = response.json()
-        items = data.get("items", [])
+        try:
+            self.client.configure_from_url(url)
+            api_url = f"{self.client.base_url}/api/v2/catalog/items"
+            params = self._parse_url(url, per_page=per_page, page=page)
+            params["time"] = timestamp or int(time.time())
+            if order:
+                params["order"] = order
+            logger.debug("Calling client.request with url=%s and params=%s", api_url, params)
+            response = await self.client.request(api_url, params=params)
+            data = response.json()
+            items = data.get("items", [])
+            logger.debug("Received %d items from API", len(items) if items else 0)
 
-        if raw_data:
-            from typing import Any, cast
+            if raw_data:
+                from typing import Any, cast
 
-            return cast(list[dict[str, Any]], items)
-        return [CatalogItem(item) for item in items] if items else []
+                return cast(list[dict[str, Any]], items)
+            return [CatalogItem(item) for item in items] if items else []
+        except Exception:
+            raise
 
     async def get_item_details(
         self, url: str, raw_data: bool = False
@@ -80,18 +102,24 @@ class ItemService:
         Returns:
             DetailedItem instance or raw dict.
         """
-        self.client.configure_from_url(url)
-        product_id = urlparse(url).path.split("/")[2].split("-")[0]
-        api_url = f"{self.client.base_url}/api/v2/items/{product_id}/details"
-
+        logger.debug("Fetching item details for url=%s, raw_data=%s", url, raw_data)
         try:
+            self.client.configure_from_url(url)
+            product_id = urlparse(url).path.split("/")[2].split("-")[0]
+            api_url = f"{self.client.base_url}/api/v2/items/{product_id}/details"
+            logger.debug("Requesting item details from %s", api_url)
+
             response = await self.client.request(api_url)
             response.raise_for_status()
             data = response.json()
             product_data = data.get("item", [])
+            logger.debug("Item details fetched successfully")
+
             return DetailedItem(product_data) if not raw_data else product_data
         except HTTPError as err:
             raise err
+        except Exception:
+            raise
 
     def _parse_url(self, url: str, per_page: int = 20, page: int = 1) -> dict:
         """
@@ -154,6 +182,7 @@ class ItemService:
             try:
                 return int(catalog_id_str)
             except ValueError:
+                logger.debug("Failed to convert catalog id to int from path: %s", path)
                 return None
         return None
 
