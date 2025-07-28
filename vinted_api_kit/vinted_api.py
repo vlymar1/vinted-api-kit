@@ -1,8 +1,12 @@
+import logging
 from typing import Optional, Union
 
 from vinted_api_kit.client import VintedHttpClient
 from vinted_api_kit.models import CatalogItem, DetailedItem
 from vinted_api_kit.services import ItemService
+from vinted_api_kit.utils import format_proxy_for_log
+
+logger = logging.getLogger(__name__)
 
 
 class VintedApi:
@@ -13,6 +17,11 @@ class VintedApi:
     def __init__(
         self, locale=None, proxies=None, client_ip=None, cookies_dir=None, persist_cookies=False
     ):
+        logger.info(
+            "Initializing VintedApi client with locale=%s, proxies=%s",
+            locale,
+            format_proxy_for_log(proxies),
+        )
         """
         Initialize VintedApi with client configuration.
 
@@ -50,6 +59,13 @@ class VintedApi:
         Returns:
             False (do not suppress exceptions)
         """
+        if exc_type:
+            logger.error(
+                "Exception %s occurred: %s",
+                exc_type,
+                exc_value,
+                exc_info=(exc_type, exc_value, traceback),
+            )
         await self._client.close()
         return False
 
@@ -76,9 +92,14 @@ class VintedApi:
         Returns:
             List of CatalogItem or raw data list.
         """
-        return await self._items_service.search_items(
-            url, per_page, page, timestamp, raw_data, order
-        )
+        try:
+            result = await self._items_service.search_items(
+                url, per_page, page, timestamp, raw_data, order
+            )
+            return result
+        except Exception as e:
+            logger.error("search_items failed: %s", e)
+            raise
 
     async def get_item_details(
         self, url: str, raw_data: bool = False
@@ -93,4 +114,9 @@ class VintedApi:
         Returns:
             DetailedItem or raw dict.
         """
-        return await self._items_service.get_item_details(url, raw_data)
+        try:
+            result = await self._items_service.get_item_details(url, raw_data)
+            return result
+        except Exception as e:
+            logger.error("get_item_details failed: %s", e)
+            raise

@@ -10,6 +10,7 @@ from curl_cffi.requests import Response
 from curl_cffi.requests.exceptions import HTTPError
 
 from vinted_api_kit.client.user_agents import get_random_user_agent
+from vinted_api_kit.utils import format_proxy_for_log
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,14 @@ class VintedHttpClient:
         self.cookies_dir.mkdir(parents=True, exist_ok=True)
         self.cookies_path = self._generate_cookies_path()
         self.persist_cookies = persist_cookies
+        logger.debug(
+            "Initializing VintedHttpClient with locale=%s, proxy=%s, client_ip=%s, cookies_path=%s, persist_cookies=%s",
+            locale,
+            format_proxy_for_log(proxies),
+            client_ip,
+            self.cookies_path,
+            persist_cookies,
+        )
         self._init_default_headers()
         if proxies:
             self.session.proxies.update(proxies)  # type: ignore[typeddict-item]
@@ -101,6 +110,7 @@ class VintedHttpClient:
                 "X-Money-Object": "true",
             }
         )
+        logger.debug("Default headers set: %s", self.session.headers)
 
     def _set_x_forwarded_for(self, ip) -> None:
         """
@@ -122,20 +132,26 @@ class VintedHttpClient:
             if len(domain_parts) > 1:
                 self.locale = domain_parts[-1]
         self.session.headers.update({"Referer": self.base_url})
+        logger.debug(
+            "Configured client from URL: base_url=%s, locale=%s, referer header updated",
+            self.base_url,
+            self.locale,
+        )
 
     def save_cookies(self) -> None:
         """
         Persist session cookies to disk if enabled.
         """
         if not self.persist_cookies:
+            logger.debug("Persist cookies disabled, skipping save")
             return
         try:
             with self.cookies_path.open("wb") as f:
                 cookies_jar = cast(Any, self.session.cookies.jar)
                 pickle.dump(cookies_jar._cookies, f)  # noqa
-                logger.debug("Cookies saved successfully.")
+                logger.debug("Cookies saved successfully to %s", self.cookies_path)
         except Exception as e:
-            logger.error(f"Failed to save cookies: {e}")
+            logger.error("Failed to save cookies: %s", e, exc_info=True)
 
     def load_cookies(self) -> Optional[dict]:
         """
@@ -145,19 +161,23 @@ class VintedHttpClient:
             Cookies dictionary or None if not exist/disabled.
         """
         if not self.persist_cookies:
+            logger.debug("Persist cookies disabled, skipping load")
             return None
         if not self.cookies_path.is_file():
-            logger.debug("Cookies file does not exist.")
+            logger.debug("Cookies file does not exist: %s", self.cookies_path)
             return None
         try:
             with self.cookies_path.open("rb") as f:
                 cookies = pickle.load(f)
             if not isinstance(cookies, dict):
+                logger.warning(
+                    "Cookies loaded but invalid format: expected dict, got %s", type(cookies)
+                )
                 return None
-            logger.debug("Cookies loaded successfully.")
+            logger.debug("Cookies loaded successfully from %s", self.cookies_path)
             return cookies
         except Exception as e:
-            logger.error(f"Failed to load cookies: {e}")
+            logger.error("Failed to load cookies: %s", e, exc_info=True)
             return None
 
     async def refresh_session_cookies(self) -> None:
@@ -165,14 +185,16 @@ class VintedHttpClient:
         Refresh session cookies by making a HEAD request to base URL.
         """
         if not self.base_url:
+            logger.error("Cannot refresh cookies because base_url is not configured")
             raise ValueError("base_url is not configured")
         try:
+            logger.debug("Refreshing session cookies by HEAD request to %s", self.base_url)
             response = await self.session.head(self.base_url)
             response.raise_for_status()
             self.save_cookies()
-            logger.info("Session cookies refreshed.")
+            logger.info("Session cookies refreshed successfully")
         except Exception as e:
-            logger.error(f"Failed to refresh session cookies: {e}")
+            logger.error("Failed to refresh session cookies: %s", e, exc_info=True)
 
     def _update_auth_headers_from_cookies(self) -> None:
         """
@@ -192,6 +214,13 @@ class VintedHttpClient:
             self.session.headers.update({"X-Anon-Id": anon_id})
         if accept_language:
             self.session.headers.update({"Accept-Language": accept_language})
+        logger.debug(
+            "Authentication headers updated from cookies: csrf_token=%s, access_token_web=%s, anon_id=%s, accept_language=%s",
+            bool(csrf_token),
+            bool(access_token_web),
+            bool(anon_id),
+            bool(accept_language),
+        )
 
     async def request(
         self,
@@ -215,34 +244,58 @@ class VintedHttpClient:
         cookies_jar = cast(Any, self.session.cookies.jar)
         if loaded_cookies:
             cookies_jar._cookies.update(loaded_cookies)  # noqa
+            logger.debug("Loaded cookies applied to session")
         else:
+            logger.debug("No cookies loaded, refreshing session cookies")
             await self.refresh_session_cookies()
             loaded_cookies = self.load_cookies()
             if loaded_cookies:
                 cookies_jar._cookies.update(loaded_cookies)  # noqa
+                logger.debug("Loaded refreshed cookies applied after refresh")
 
         self._update_auth_headers_from_cookies()
 
-        response: Response = await self.session.get(
-            url=url,
-            params=params,
-            impersonate="chrome",
-            verify=False,
-        )
-
-        if response.status_code in (HTTP_STATUS_UNAUTHORIZED, HTTP_STATUS_FORBIDDEN):
-            await self.refresh_session_cookies()
-            loaded_cookies = self.load_cookies()
-            if loaded_cookies:
-                cookies_jar._cookies.update(loaded_cookies)  # noqa
-            response = await self.session.get(
+        try:
+            response: Response = await self.session.get(
                 url=url,
                 params=params,
                 impersonate="chrome",
                 verify=False,
             )
+            logger.debug("Received response with status %s from %s", response.status_code, url)
+        except Exception as e:
+            logger.error("HTTP request failed: %s", e, exc_info=True)
+            raise
+
+        if response.status_code in (HTTP_STATUS_UNAUTHORIZED, HTTP_STATUS_FORBIDDEN):
+            logger.warning(
+                "Unauthorized or forbidden status (%d) received, refreshing cookies and retrying: %s",
+                response.status_code,
+                url,
+            )
+            await self.refresh_session_cookies()
+            loaded_cookies = self.load_cookies()
+            if loaded_cookies:
+                cookies_jar._cookies.update(loaded_cookies)  # noqa
+                logger.debug("Loaded refreshed cookies applied after 401/403")
+            try:
+                response = await self.session.get(
+                    url=url,
+                    params=params,
+                    impersonate="chrome",
+                    verify=False,
+                )
+                logger.debug(
+                    "Received response with status %s from retry %s", response.status_code, url
+                )
+            except Exception as e:
+                logger.error("HTTP retry request failed: %s", e, exc_info=True)
+                raise
 
         if response.status_code >= 400:
+            logger.error(
+                "HTTP error %d received from %s: %s", response.status_code, url, response.reason
+            )
             raise HTTPError(
                 f"HTTP Error {response.status_code}: {response.reason}",
                 code=response.status_code,  # type: ignore[arg-type]

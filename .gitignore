@@ -210,5 +210,6 @@ __marimo__/
 .DS_Store/
 
 dev/
+reports/
 
 cookies*.pk
