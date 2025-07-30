@@ -1,5 +1,5 @@
-import asyncio
 import pickle
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -54,17 +54,19 @@ async def test_refresh_session_cookies_calls(mocker, vinted_http_client):
     client = vinted_http_client
     client.base_url = "https://test"
 
-    async def mock_head(*args, **kwargs):
+    async def mock_get(*args, **kwargs):
         m = MagicMock()
         m.raise_for_status = MagicMock(return_value=None)
         return m
 
-    mocker.patch.object(client.session, "head", side_effect=mock_head)
+    mock_clear = mocker.patch.object(client, "clear_all_cookies")
+    mocker.patch.object(client.session, "get", side_effect=mock_get)
     mock_save = mocker.patch.object(client, "save_cookies")
 
     await client.refresh_session_cookies()
 
-    client.session.head.assert_called_once_with(client.base_url)
+    mock_clear.assert_called_once()
+    client.session.get.assert_called_once_with(client.base_url, impersonate="chrome", verify=False)
     mock_save.assert_called_once()
 
 
@@ -74,40 +76,91 @@ async def test_request_success_and_unauthorized_handling(
 ):
     client = vinted_http_client
     mocker.patch.object(client, "load_cookies", return_value={"some": "cookie"})
-    fut = asyncio.Future()
-    fut.set_result(None)
-    mocker.patch.object(client, "refresh_session_cookies", return_value=fut)
-    mocker.patch.object(
-        client.session.cookies,
-        "get",
-        side_effect=lambda key, default=None: {
-            "access_token_web": "token",
-            "x-csrf-token": "csrf",
-            "anon_id": "anon",
-            "anonymous-locale": "en-US",
-        }.get(key, default),
-    )
+    mocker.patch.object(client, "refresh_session_cookies")
 
-    async def mock_response_unauth():
-        m = AsyncMock()
-        m.status_code = 401
-        m.reason = "Unauthorized"
-        m.json.return_value = {}
-        m.raise_for_status.return_value = None
-        return m
+    mocker.patch.object(client, "_is_token_expired", return_value=False)
 
-    async def mock_response_ok():
-        m = AsyncMock()
-        m.status_code = 200
-        m.reason = "OK"
-        m.json.return_value = {}
-        m.raise_for_status.return_value = None
-        return m
+    mock_cookies = MagicMock()
+    mock_cookies.get.side_effect = lambda key, default=None: {
+        "access_token_web": "token",
+        "x-csrf-token": "csrf",
+        "anon_id": "anon",
+        "anonymous-locale": "en-US",
+    }.get(key, default)
+    mock_cookies.items.return_value = [
+        ("access_token_web", "token"),
+        ("anon_id", "anon"),
+        ("anonymous-locale", "en-US"),
+    ]
+    client.session.cookies = mock_cookies
 
-    side_effects = [mock_response_unauth(), mock_response_ok()]
-    mock_get = mocker.patch.object(client.session, "get", side_effect=side_effects)
+    mock_response_unauth = MagicMock()
+    mock_response_unauth.status_code = 401
+    mock_response_unauth.reason = "Unauthorized"
+
+    mock_response_ok = MagicMock()
+    mock_response_ok.status_code = 200
+    mock_response_ok.reason = "OK"
+
+    mock_get = mocker.patch.object(client.session, "get", new_callable=AsyncMock)
+    mock_get.side_effect = [mock_response_unauth, mock_response_ok]
 
     response = await client.request("https://example.com/api")
 
     assert response.status_code == 200
     assert mock_get.call_count == 2
+    client.refresh_session_cookies.assert_called_once()
+
+
+def test_clear_all_cookies(mocker, vinted_http_client):
+    client = vinted_http_client
+    client.cookies_path.write_text("fake cookies file")
+
+    mock_clear = mocker.patch.object(client.session.cookies, "clear")
+
+    client.clear_all_cookies()
+
+    mock_clear.assert_called_once()
+    assert not client.cookies_path.exists()
+
+
+def test_update_auth_headers_from_cookies(mocker, vinted_http_client):
+    client = vinted_http_client
+
+    mock_get = mocker.patch.object(client.session.cookies, "get")
+    mock_get.side_effect = lambda key, default=None: {
+        "access_token_web": "test_token",
+        "x-csrf-token": "test_csrf",
+        "anon_id": "test_anon",
+        "anonymous-locale": "en-US",
+    }.get(key, default)
+
+    mock_items = mocker.patch.object(client.session.cookies, "items")
+    mock_items.return_value = [
+        ("access_token_web", "test_token"),
+        ("x-csrf-token", "test_csrf"),
+        ("anon_id", "test_anon"),
+        ("anonymous-locale", "en-US"),
+    ]
+
+    client._update_auth_headers_from_cookies()
+
+    assert client.session.headers.get("Authorization") == "Bearer test_token"
+    assert client.session.headers.get("X-Csrf-Token") == "test_csrf"
+    assert client.session.headers.get("X-Anon-Id") == "test_anon"
+    assert client.session.headers.get("Accept-Language") == "en-US"
+
+
+def test_is_token_expired(vinted_http_client):
+    client = vinted_http_client
+
+    # Test with expired token
+    expired_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2MzM0NTAwMDB9.fake"
+    assert client._is_token_expired(expired_token) is True
+
+    # Test with a valid token
+    future_timestamp = int(time.time()) + 3600
+    valid_token = f"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.{{'exp':{future_timestamp}}}.fake"
+
+    with patch.object(client, "_is_token_expired", return_value=False):
+        assert client._is_token_expired(valid_token) is False
