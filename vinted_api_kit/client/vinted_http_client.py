@@ -182,19 +182,72 @@ class VintedHttpClient:
 
     async def refresh_session_cookies(self) -> None:
         """
-        Refresh session cookies by making a HEAD request to base URL.
+        Get fresh session cookies by visiting the site as a first-time user.
+
+        This method:
+        1. Clears all existing cookies
+        2. Makes a GET request to the base URL
+        3. Saves new cookies received from the server
+
+        Raises:
+            ValueError: If base_url is not configured
+            HTTPError: If the refresh request fails
         """
         if not self.base_url:
-            logger.error("Cannot refresh cookies because base_url is not configured")
             raise ValueError("base_url is not configured")
+
+        logger.info("Getting fresh cookies as first-time visitor...")
+
+        self.clear_all_cookies()
+
+        response = await self.session.get(self.base_url, impersonate="chrome", verify=False)
+        response.raise_for_status()
+
+        logger.debug("Fresh cookies received: %s", len(self.session.cookies))
+        logger.debug(
+            "New cookies: %s", [f"{k}={str(v)[:20]}..." for k, v in self.session.cookies.items()]
+        )
+
+        self.save_cookies()
+        logger.info("Fresh session cookies obtained successfully")
+
+    def clear_all_cookies(self) -> None:
+        """
+        Clear all cookies from session and delete cookies file.
+
+        This method is called when we need to start fresh, typically
+        when authentication fails or tokens are expired.
+        """
+        self.session.cookies.clear()
+
+        if self.cookies_path.exists():
+            try:
+                self.cookies_path.unlink()
+                logger.debug("Cookies file deleted: %s", self.cookies_path)
+            except Exception as e:
+                logger.error("Failed to delete cookies file: %s", e)
+
+        logger.info("All cookies cleared")
+
+    @staticmethod
+    def _is_token_expired(access_token: str) -> bool:
+        """Check if JWT access token is expired."""
         try:
-            logger.debug("Refreshing session cookies by HEAD request to %s", self.base_url)
-            response = await self.session.head(self.base_url)
-            response.raise_for_status()
-            self.save_cookies()
-            logger.info("Session cookies refreshed successfully")
-        except Exception as e:
-            logger.error("Failed to refresh session cookies: %s", e, exc_info=True)
+            import base64
+            import json
+            from datetime import datetime
+
+            payload_b64: str = access_token.split(".")[1]
+            payload_b64 += "=" * (4 - len(payload_b64) % 4)
+            payload = json.loads(base64.b64decode(payload_b64))
+
+            exp_timestamp = payload.get("exp", 0)
+            current_timestamp = datetime.now().timestamp()
+            result: bool = current_timestamp >= exp_timestamp
+
+            return result
+        except Exception:
+            return True
 
     def _update_auth_headers_from_cookies(self) -> None:
         """
@@ -205,6 +258,11 @@ class VintedHttpClient:
         csrf_token = cookies.get("x-csrf-token")
         anon_id = cookies.get("anon_id")
         accept_language = cookies.get("anonymous-locale")
+
+        logger.debug(
+            "Current session cookies: %s",
+            [f"{k}={v[:20]}..." if len(str(v)) > 20 else f"{k}={v}" for k, v in cookies.items()],
+        )
 
         if csrf_token:
             self.session.headers.update({"X-Csrf-Token": csrf_token})
@@ -240,62 +298,46 @@ class VintedHttpClient:
         Raises:
             HTTPError: If response code >= 400.
         """
+
         loaded_cookies = self.load_cookies()
-        cookies_jar = cast(Any, self.session.cookies.jar)
         if loaded_cookies:
+            cookies_jar = cast(Any, self.session.cookies.jar)
             cookies_jar._cookies.update(loaded_cookies)  # noqa
-            logger.debug("Loaded cookies applied to session")
+            logger.debug("Initial cookies loaded and applied")
+
+            # Checking token expiration
+            access_token = self.session.cookies.get("access_token_web")
+            if access_token and self._is_token_expired(access_token):
+                logger.info("Access token expired, getting fresh cookies")
+                await self.refresh_session_cookies()
         else:
-            logger.debug("No cookies loaded, refreshing session cookies")
+            logger.debug("No saved cookies found, refreshing...")
             await self.refresh_session_cookies()
-            loaded_cookies = self.load_cookies()
-            if loaded_cookies:
-                cookies_jar._cookies.update(loaded_cookies)  # noqa
-                logger.debug("Loaded refreshed cookies applied after refresh")
 
         self._update_auth_headers_from_cookies()
 
-        try:
-            response: Response = await self.session.get(
+        response: Response = await self.session.get(
+            url=url,
+            params=params,
+            impersonate="chrome",
+            verify=False,
+        )
+        logger.debug("First request status: %s", response.status_code)
+
+        if response.status_code in (HTTP_STATUS_UNAUTHORIZED, HTTP_STATUS_FORBIDDEN):
+            logger.warning("Auth failed, getting completely fresh cookies...")
+            await self.refresh_session_cookies()
+            self._update_auth_headers_from_cookies()
+
+            response = await self.session.get(
                 url=url,
                 params=params,
                 impersonate="chrome",
                 verify=False,
             )
-            logger.debug("Received response with status %s from %s", response.status_code, url)
-        except Exception as e:
-            logger.error("HTTP request failed: %s", e, exc_info=True)
-            raise
-
-        if response.status_code in (HTTP_STATUS_UNAUTHORIZED, HTTP_STATUS_FORBIDDEN):
-            logger.warning(
-                "Unauthorized or forbidden status (%d) received, refreshing cookies and retrying: %s",
-                response.status_code,
-                url,
-            )
-            await self.refresh_session_cookies()
-            loaded_cookies = self.load_cookies()
-            if loaded_cookies:
-                cookies_jar._cookies.update(loaded_cookies)  # noqa
-                logger.debug("Loaded refreshed cookies applied after 401/403")
-            try:
-                response = await self.session.get(
-                    url=url,
-                    params=params,
-                    impersonate="chrome",
-                    verify=False,
-                )
-                logger.debug(
-                    "Received response with status %s from retry %s", response.status_code, url
-                )
-            except Exception as e:
-                logger.error("HTTP retry request failed: %s", e, exc_info=True)
-                raise
+            logger.debug("Retry request status: %s", response.status_code)
 
         if response.status_code >= 400:
-            logger.error(
-                "HTTP error %d received from %s: %s", response.status_code, url, response.reason
-            )
             raise HTTPError(
                 f"HTTP Error {response.status_code}: {response.reason}",
                 code=response.status_code,  # type: ignore[arg-type]
