@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vinted-api-kit"
-version = "0.1.0"
+version = "0.1.0.post1"
 description = "Lightweight asynchronous Python client library for accessing Vinted API and scraping item data."
 authors = [
     {name = "Lymar Volodymyr",email = "volodymyr.lymar1@gmail.com"},

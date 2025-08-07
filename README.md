@@ -1,11 +1,13 @@
 <div align="center">
 
-![Vinted Api Kit](./assets/logo.png)
+![Vinted Api Kit logo](https://raw.githubusercontent.com/vlymar-dev/vinted-api-kit/main/assets/logo.png)
 
 ***Lightweight asynchronous Python client library for accessing Vinted API and scraping item data.***
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
+[![Package Version](https://img.shields.io/pypi/v/vinted-api-kit.svg)](https://pypi.org/project/vinted-api-kit/)
+[![Python Version](https://img.shields.io/pypi/pyversions/vinted-api-kit.svg)](https://pypi.org/project/vinted-api-kit/)
+[![codecov](https://codecov.io/github/vlymar1/vinted-api-kit/graph/badge.svg?token=SLCFGVYDOM)](https://codecov.io/github/vlymar1/vinted-api-kit)
+[![License](https://img.shields.io/pypi/l/vinted-api-kit.svg)](https://github.com/vlymar1/vinted-api-kit/blob/main/LICENSE)
 </div>
 
 ---
