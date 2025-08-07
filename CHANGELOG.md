@@ -12,7 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for fetching user's own items
 - Enhanced error handling for network timeouts
 
-## [0.1.0] - 2025-01-30
+## [0.1.0.post1] - 2025-08-07
+
+### Fixed
+- Logo display compatibility for PyPI
+- Added project badges to README.md for better presentation
+- Corrected CHANGELOG formatting and metadata
+
+## [0.1.0] - 2025-08-07
 
 ### Added
 - Asynchronous HTTP client for Vinted API with cookie management
@@ -29,4 +36,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 80%+ test coverage
 
 [Unreleased]: https://github.com/vlymar-dev/vinted-api-kit/compare/v0.1.0...HEAD
+[0.1.0.post1]: https://github.com/vlymar-dev/vinted-api-kit/compare/v0.1.0...v0.1.0.post1
 [0.1.0]: https://github.com/vlymar-dev/vinted-api-kit/releases/tag/v0.1.0
