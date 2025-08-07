@@ -4,8 +4,8 @@ from typing import Any, Callable, Generator
 import pytest
 
 from vinted_api_kit import VintedApi
-from vinted_api_kit.client import VintedHttpClient
-from vinted_api_kit.services import ItemService
+from vinted_api_kit.client.vinted_http_client import VintedHttpClient
+from vinted_api_kit.services.item_service import ItemService
 
 
 @pytest.fixture

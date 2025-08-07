@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from vinted_api_kit.client import VintedHttpClient
+from vinted_api_kit.client.vinted_http_client import VintedHttpClient
 
 
 def test_init_headers_and_attrs(vinted_http_client: VintedHttpClient):

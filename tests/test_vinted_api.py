@@ -30,14 +30,14 @@ async def test_search_items_calls_service_search_items(
 
 
 @pytest.mark.asyncio
-async def test_get_item_details_calls_service_get(
+async def test_item_details_calls_service_get(
     vinted_api: VintedApi, mocker, sample_detailed_item_data
 ):
     mock_get = mocker.patch.object(
-        vinted_api._items_service, "get_item_details", return_value=sample_detailed_item_data
+        vinted_api._items_service, "item_details", return_value=sample_detailed_item_data
     )
 
-    result = await vinted_api.get_item_details("https://vinted.example.com/item/123")
+    result = await vinted_api.item_details("https://vinted.example.com/item/123")
 
     mock_get.assert_awaited_once_with("https://vinted.example.com/item/123", False)
     assert result == sample_detailed_item_data
