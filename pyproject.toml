@@ -12,7 +12,7 @@ authors = [
 maintainers = [
     {name = "Lymar Volodymyr",email = "volodymyr.lymar1@gmail.com"},
 ]
-license = "MIT"
+license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -22,7 +22,7 @@ dependencies = [
 keywords = ["python", "async", "vinted", "api", "vinted-api", "web-scraping", "ecommerce"]
 
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
     "Operating System :: OS Independent",
