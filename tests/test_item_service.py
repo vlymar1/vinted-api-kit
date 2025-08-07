@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from vinted_api_kit.models import CatalogItem, DetailedItem
-from vinted_api_kit.services import ItemService
+from vinted_api_kit.services.item_service import ItemService
 
 
 @pytest.mark.asyncio
@@ -37,7 +37,7 @@ async def test_search_items_returns_catalog_items(mocker, item_service: ItemServ
 
 
 @pytest.mark.asyncio
-async def test_get_item_details_returns_detailed_item(mocker, item_service: ItemService):
+async def test_item_details_returns_detailed_item(mocker, item_service: ItemService):
     raw_response = {
         "item": {
             "id": 1,
@@ -61,7 +61,7 @@ async def test_get_item_details_returns_detailed_item(mocker, item_service: Item
     mock_response.json = MagicMock(return_value=raw_response)
     mocker.patch.object(item_service.client, "request", return_value=mock_response)
 
-    result = await item_service.get_item_details("https://www.vinted.fr/item/1")
+    result = await item_service.item_details("https://www.vinted.fr/item/1")
 
     assert isinstance(result, DetailedItem)
     assert result.id == 1
