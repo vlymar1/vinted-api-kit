@@ -1,9 +1,9 @@
 import logging
 from typing import Optional, Union
 
-from vinted_api_kit.client import VintedHttpClient
+from vinted_api_kit.client.vinted_http_client import VintedHttpClient
 from vinted_api_kit.models import CatalogItem, DetailedItem
-from vinted_api_kit.services import ItemService
+from vinted_api_kit.services.item_service import ItemService
 from vinted_api_kit.utils import format_proxy_for_log
 
 logger = logging.getLogger(__name__)
@@ -101,9 +101,7 @@ class VintedApi:
             logger.error("search_items failed: %s", e)
             raise
 
-    async def get_item_details(
-        self, url: str, raw_data: bool = False
-    ) -> Union[DetailedItem, dict]:
+    async def item_details(self, url: str, raw_data: bool = False) -> Union[DetailedItem, dict]:
         """
         Get detailed information of an item by URL.
 
@@ -115,8 +113,8 @@ class VintedApi:
             DetailedItem or raw dict.
         """
         try:
-            result = await self._items_service.get_item_details(url, raw_data)
+            result = await self._items_service.item_details(url, raw_data)
             return result
         except Exception as e:
-            logger.error("get_item_details failed: %s", e)
+            logger.error("item_details failed: %s", e)
             raise
