@@ -1,11 +1,35 @@
-# vinted-api-kit
+<div align="center">
 
-**Lightweight asynchronous Python client library for accessing Vinted API and scraping item data.**
+![Vinted Api Kit](./assets/logo.png)
+
+***Lightweight asynchronous Python client library for accessing Vinted API and scraping item data.***
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
----
+</div>
 
+---
+## ✨ Features
+
+- 🚀 **Asynchronous** - Built with asyncio for high performance
+- 🌍 **Multi-locale** - Supports multiple Vinted domains (FR, DE, US, etc.)
+- 🔍 **Item Search** - Search catalog with filters and pagination
+- 📦 **Item Details** - Get complete item information
+- 🍪 **Cookie Persistence** - Automatic session management
+- 🔐 **Proxy Support** - Built-in proxy configuration
+- 📊 **Type Hints** - Full typing support for better IDE experience
+
+---
+## 📚 Table of Contents
+
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [Development](#development)
+- [Changelog](#changelog)
+- [License](#license)
+
+---
 ## Installation
 
 Install via pip:
@@ -16,65 +40,109 @@ Or using poetry:
 ```bash
 poetry add vinted-api-kit
 ```
----
 
+---
 ## Quick Start
 
 ```python
 import asyncio
-from vinted_api_kit import VintedApi
+from vinted_api_kit import VintedApi, CatalogItem, DetailedItem
 
 async def main():
     async with VintedApi(locale="fr") as vinted:
-        items = await vinted.search_items(
-            url="https://www.vinted.fr/catalog?search_text=adidas"
+        # Get detailed item information
+        item_detail: DetailedItem = await vinted.item_details(
+            url="https://www.vinted.fr/items/922704975-adidas-x-15"
         )
-        for item in items:
-            print(f"{item.title}: {item.price} {item.currency}")
+        print(f"📦 {item_detail.title}")
+        print(f"💰 {item_detail.price}\n")
 
-asyncio.run(main())
+        # Search for items
+        items: list[CatalogItem] = await vinted.search_items(
+            url="https://www.vinted.fr/catalog?search_text=adidas",
+            per_page=5
+        )
+
+        print("🔍 Search results:")
+        for item in items:
+            print(f"  • {item.title} - {item.price} {item.currency}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
-
 ---
-
 ## Configuration
 
-- `locale` - locale string for API requests, e.g. `'fr'`, `'de'`, `'us'`.
-- `proxies` - dictionary of proxy settings if needed.
-- `client_ip` - optional IP header override.
-- `cookies_dir` - directory path for persisting cookies.
-- `persist_cookies` - boolean to enable or disable cookie persistence.
+### Basic usage
+```python
+from vinted_api_kit import VintedApi
+
+async with VintedApi(locale="fr") as vinted:
+    pass
+```
+
+### Advanced configuration
+```python
+from vinted_api_kit import VintedApi
+
+async with VintedApi(
+    locale="de",
+    proxies={"http": "http://proxy:8080"},
+    client_ip="192.168.1.1",
+    cookies_dir="./cookies",
+    persist_cookies=True
+) as vinted:
+    pass
+```
+
+**Parameters:**
+- `locale` - Vinted domain locale (`'fr'`, `'de'`, `'us'`, etc.)
+- `proxies` - Proxy configuration (requests format)
+- `client_ip` - Override client IP header
+- `cookies_dir` - Directory for cookie storage
+- `persist_cookies` - Enable/disable cookie persistence
 
 These can be set when creating an instance of the `VintedApi` class.
 
 No additional environment variables are required by default.
 
 ---
+## 🛠️ Development
 
-## Run tests:
+### Setup
+```shell
+git clone https://github.com/vlymar1/vinted-api-kit.git
+cd vinted-api-kit
+```
+*Install dependencies (you'll need to set up your dev environment)*
+### Testing
 
 ```shell
-poetry run pytest -v
+make test-coverage # run tests with coverage
+make test-coverage-view # view coverage report in browser
 ```
 
-## Run linters and formatters:
-
-To lint and format your code with ruff, run:
+### Code Quality
 
 ```shell
-poetry run ruff check vinted_api_kit tests dev
-poetry run ruff check --fix vinted_api_kit tests dev # to auto-fix issues where possible
+make lint-check # check code with ruff and mypy
+make lint-reformat # format and fix code with ruff
 ```
 
-Please configure ruff with a `pyproject.toml` or `.ruff.toml` file for your preferred rules.
+### Cleanup
 
-Make sure to follow PEP8 style guidelines.
+```shell
+make clean # remove cache files and build artifacts
+```
 
-It is recommended to set up pre-commit hooks with ruff for automatic linting on git operations.
+**Development Guidelines:**
+- Follow PEP8 style guidelines
+- Configure ruff in `pyproject.toml` for your preferred rules
+- Set up pre-commit hooks for automatic linting
+- Contributions welcome! Please open issues or pull requests
 
-Contributions are welcome! Please open issues or pull requests.
-
+---
 ## Changelog
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the list of notable changes per version.
@@ -95,13 +163,11 @@ See [`CHANGELOG.md`](CHANGELOG.md) for the list of notable changes per version.
   - Conventional commits combined with [semantic-release](https://semantic-release.gitbook.io/semantic-release/)
 
 ---
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-
 ## Maintainers / Contacts
 
 - GitHub: [https://github.com/vlymar1](https://github.com/vlymar1)
