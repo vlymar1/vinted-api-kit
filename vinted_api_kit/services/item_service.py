@@ -5,7 +5,7 @@ from urllib.parse import parse_qsl, urlparse
 
 from curl_cffi.requests.exceptions import HTTPError
 
-from vinted_api_kit.client import VintedHttpClient
+from vinted_api_kit.client.vinted_http_client import VintedHttpClient
 from vinted_api_kit.models import CatalogItem, DetailedItem
 
 logger = logging.getLogger(__name__)
@@ -89,9 +89,7 @@ class ItemService:
         except Exception:
             raise
 
-    async def get_item_details(
-        self, url: str, raw_data: bool = False
-    ) -> Union[DetailedItem, dict]:
+    async def item_details(self, url: str, raw_data: bool = False) -> Union[DetailedItem, dict]:
         """
         Get detailed info of an item by URL.
 
