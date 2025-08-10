@@ -54,11 +54,10 @@ class DetailedItem:
         self.brand_title = brand_dto.get("title")
         self.brand_slug = brand_dto.get("slug")
         self.size_title = self._get_size_title(data)
-        price_data = data.get("price") or {}
-        self.currency = price_data.get("currency_code")
-        self.price = price_data.get("amount")
-        total_item_price_data = data.get("total_item_price") or {}
-        self.total_item_price = total_item_price_data.get("amount")
+
+        self.currency, self.price = self._extract_price_data(data)
+        self.total_item_price = self._extract_total_price(data)
+
         self.photo = self._get_first_photo_url(data)
         self.url = data.get("url")
         self.created_at_ts = self._get_created_at_ts(data)
@@ -67,6 +66,72 @@ class DetailedItem:
             self.raw_timestamp = (photos[0].get("high_resolution") or {}).get("timestamp")
         else:
             self.raw_timestamp = None
+
+    @staticmethod
+    def _extract_price_data(data: dict) -> tuple[str, float]:
+        """
+        Extract currency and price from data, handling different formats.
+
+        Parameters
+        ----------
+        data : dict
+            Raw item data from API response.
+
+        Returns
+        -------
+        tuple[str, float]
+            Tuple of (currency_code, price_amount).
+        """
+        price_data = data.get("price")
+        currency = data.get("currency", "")
+
+        if isinstance(price_data, dict):
+            # Format: {"amount": "1.43", "currency_code": "EUR"}
+            currency = price_data.get("currency_code", currency)
+            price_amount = price_data.get("amount", "0")
+        elif isinstance(price_data, str):
+            # Format: "1.43"
+            price_amount = price_data
+        else:
+            price_amount = "0"
+
+        try:
+            price_float = float(price_amount)
+        except (ValueError, TypeError):
+            price_float = 0.0
+
+        return currency, price_float
+
+    @staticmethod
+    def _extract_total_price(data: dict) -> float:
+        """
+        Extract total item price from data, handling different formats.
+
+        Parameters
+        ----------
+        data : dict
+            Raw item data from API response.
+
+        Returns
+        -------
+        float
+            Total price amount as float value.
+        """
+        total_price_data = data.get("total_item_price")
+
+        if isinstance(total_price_data, dict):
+            # Format: {"amount": "2.2", "currency_code": "EUR"}
+            price_amount = total_price_data.get("amount", "0")
+        elif isinstance(total_price_data, str):
+            # Format: "2.2"
+            price_amount = total_price_data
+        else:
+            price_amount = "0"
+
+        try:
+            return float(price_amount)
+        except (ValueError, TypeError):
+            return 0.0
 
     @staticmethod
     def _get_size_title(data: dict) -> str:
