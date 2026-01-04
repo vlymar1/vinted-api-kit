@@ -1,79 +1,74 @@
-from pathlib import Path
-from typing import Any, Callable, Generator
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
-from vinted_api_kit import VintedApi
-from vinted_api_kit.client.vinted_http_client import VintedHttpClient
-from vinted_api_kit.services.item_service import ItemService
+from curl_cffi.requests import Response
 
 
 @pytest.fixture
-def vinted_http_client(tmp_path: Path) -> Generator[VintedHttpClient, Any, None]:
-    client = VintedHttpClient(
-        locale="fr",
-        proxies={"http": "http://127.0.0.1:8888"},
-        client_ip="123.123.123.123",
-        cookies_dir=tmp_path,
-        persist_cookies=False,
-    )
-    yield client
-    import asyncio
-
-    asyncio.run(client.close())
-
-
-@pytest.fixture
-def item_service(vinted_http_client: VintedHttpClient):
-    return ItemService(client=vinted_http_client)
-
-
-@pytest.fixture
-async def vinted_api():
-    async with VintedApi() as api:
-        yield api
-
-
-@pytest.fixture
-def sample_catalog_item_data() -> Callable[[int], dict[str, Any]]:
-    def factory(ts: int = 1710000000) -> dict[str, Any]:
-        return {
-            "id": 77,
-            "title": "Vintage Jeans",
-            "brand_title": "Levis",
-            "size_title": "32",
-            "price": {"currency_code": "EUR", "amount": 45},
-            "photo": {
-                "url": "https://cdn.vinted.net/catalog.jpg",
-                "high_resolution": {"timestamp": ts},
-            },
-            "photos": [{"high_resolution": {"timestamp": ts}}],
-            "url": "https://www.vinted.it/items/77-vintage-jeans",
-        }
-
-    return factory
-
-
-@pytest.fixture
-def sample_detailed_item_data() -> dict[str, Any]:
+def sample_catalog_item_data():
     return {
-        "id": 42,
-        "title": "Test Product",
-        "description": "Very rare Vinted item",
-        "brand_dto": {"title": "Nike", "slug": "nike"},
-        "price": {"currency_code": "EUR", "amount": 19.99},
-        "total_item_price": {"amount": 22.49},
+        "id": 123,
+        "title": "Nike Air Max",
+        "brand_title": "Nike",
+        "size_title": "42",
+        "price": {"amount": 50.0, "currency_code": "EUR"},
+        "photo": {
+            "url": "https://example.com/photo.jpg",
+            "high_resolution": {"timestamp": 1734796339},
+        },
+        "url": "https://vinted.com/items/123-nike-air-max",
+    }
+
+
+@pytest.fixture
+def sample_detailed_item_data():
+    return {
+        "id": 456,
+        "title": "Adidas Sneakers",
+        "description": "Great condition",
+        "brand_dto": {"title": "Adidas", "slug": "adidas"},
+        "price": {"amount": 75.0, "currency_code": "USD"},
+        "total_item_price": {"amount": 80.0, "currency_code": "USD"},
         "photos": [
-            {
-                "url": "https://cdn.vinted.net/images.jpg",
-                "high_resolution": {"timestamp": 1710000000},
-            }
+            {"url": "https://example.com/photo1.jpg", "high_resolution": {"timestamp": 1734796339}}
         ],
-        "url": "https://www.vinted.it/items/42-test-product",
+        "url": "https://vinted.com/items/456",
         "plugins": [
             {
                 "name": "attributes",
-                "data": {"attributes": [{"code": "size", "data": {"value": "M"}}]},
+                "data": {"attributes": [{"code": "size", "data": {"value": "44"}}]},
             }
         ],
     }
+
+
+@pytest.fixture
+def mock_async_session():
+    session = AsyncMock()
+    session.cookies = MagicMock()
+    session.cookies.get = MagicMock(return_value=None)
+    session.headers = {}
+    return session
+
+
+@pytest.fixture
+def mock_http_response():
+    response = MagicMock(spec=Response)
+    response.status_code = 200
+    response.json.return_value = {
+        "items": [
+            {
+                "id": 1,
+                "title": "Item 1",
+                "price": {"amount": 10, "currency_code": "EUR"},
+            }
+        ]
+    }
+    return response
+
+
+@pytest.fixture
+def temp_cookies_dir(tmp_path):
+    cookies_dir = tmp_path / "cookies"
+    cookies_dir.mkdir()
+    return cookies_dir
