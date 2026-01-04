@@ -57,9 +57,6 @@ dependencies = [
     "pre-commit>=4.2.0",
     "tox>=4.28.3",
 ]
-post-install-commands = [
-    "pre-commit install",
-]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest -v --tb=short {args:tests}"
