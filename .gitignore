@@ -212,4 +212,7 @@ __marimo__/
 dev/
 reports/
 
-cookies*.pk
+cookies*.*
+
+# MacOS
+.DS_Store

@@ -61,7 +61,7 @@ VINTED_BASE_URL_TEMPLATE = "https://www.vinted.{locale}"
 
 SortOrder = Literal["newest_first", "relevance", "price_high_to_low", "price_low_to_high"]
 
-StorageFormat = Literal["pickle", "json", "mozilla"]
+StorageFormat = Literal["json", "pickle", "mozilla"]
 
 HTTP_STATUS_OK = 200
 HTTP_STATUS_UNAUTHORIZED = 401
