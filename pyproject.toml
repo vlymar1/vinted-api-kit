@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vinted-api-kit"
-version = "0.1.0.post1"
+version = "1.0.0"
 description = "Lightweight asynchronous Python client library for accessing Vinted API and scraping item data."
 authors = [
     {name = "Lymar Volodymyr",email = "volodymyr.lymar1@gmail.com"},
@@ -22,7 +22,7 @@ dependencies = [
 keywords = ["python", "async", "vinted", "api", "vinted-api", "web-scraping", "ecommerce"]
 
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
     "Operating System :: OS Independent",
@@ -41,20 +41,35 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/vlymar-dev/vinted-api-kit"
-Documentation = "https://github.com/vlymar-dev/vinted-api-kit"
-Repository = "https://github.com/vlymar-dev/vinted-api-kit"
+Homepage = "https://github.com/vlymar1/vinted-api-kit"
+Documentation = "https://github.com/vlymar1/vinted-api-kit"
+Repository = "https://github.com/vlymar1/vinted-api-kit"
 
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.12.5"
-pre-commit = "^4.2.0"
-mypy = "^1.17.0"
-pytest = "^8.4.1"
-pytest-cov = "^6.2.1"
-pytest-asyncio = "^1.1.0"
-pytest-html = "^4.1.1"
-pytest-mock = "^3.14.1"
-tox = "^4.28.3"
+[tool.hatch.envs.default]
+dependencies = [
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "pytest-asyncio>=1.1.0",
+    "pytest-html>=4.1.1",
+    "pytest-mock>=3.14.1",
+    "ruff>=0.14.9",
+    "mypy>=1.17",
+    "pre-commit>=4.2.0",
+    "tox>=4.28.3",
+]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest -v --tb=short {args:tests}"
+test-cov = "pytest -v --cov=vinted --cov-report=html --cov-report=term-missing {args:tests}"
+lint = "ruff check vinted/ tests/"
+format = "ruff format vinted/ tests/"
+type-check = "mypy vinted/"
+install-dev = "pip install -e ."
+setup-hooks = "pre-commit install"
+all = ["format", "lint", "type-check", "test-cov"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["vinted"]
 
 [tool.ruff]
 exclude = [

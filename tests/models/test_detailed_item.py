@@ -1,42 +1,41 @@
-from datetime import datetime
-
-from vinted_api_kit.models import DetailedItem
+from vinted.models.item import DetailedItem
 
 
-def test_detailed_item_parsing(sample_detailed_item_data):
-    data = sample_detailed_item_data
+def test_detailed_item_creation(sample_detailed_item_data):
+    item = DetailedItem(raw_data=sample_detailed_item_data)
 
-    item = DetailedItem(data)
+    assert item.id == 456
+    assert item.title == "Adidas Sneakers"
+    assert item.description == "Great condition"
+    assert item.brand_title == "Adidas"
+    assert item.brand_slug == "adidas"
+    assert item.size_title == "44"
+    assert item.currency == "USD"
+    assert item.price == 75.0
+    assert item.total_item_price == 80.0
+    assert item.photo == "https://example.com/photo1.jpg"
 
-    assert item.id == 42
-    assert item.title == "Test Product"
-    assert item.description == "Very rare Vinted item"
-    assert item.brand_title == "Nike"
-    assert item.brand_slug == "nike"
+
+def test_detailed_item_extract_price_dict():
+    data = {"price": {"amount": "100.5", "currency_code": "GBP"}}
+    item = DetailedItem(raw_data=data)
+    assert item.price == 100.5
+    assert item.currency == "GBP"
+
+
+def test_detailed_item_extract_price_string():
+    data = {"price": "50.25", "currency": "EUR"}
+    item = DetailedItem(raw_data=data)
+    assert item.price == 50.25
     assert item.currency == "EUR"
-    assert item.price == 19.99
-    assert item.total_item_price == 22.49
-    assert item.photo == "https://cdn.vinted.net/images.jpg"
-    assert item.url == "https://www.vinted.it/items/42-test-product"
-    assert item.size_title == "M"
-    assert isinstance(item.created_at_ts, datetime)
-    assert item.raw_timestamp == 1710000000
 
 
-def test_detailed_item_missing_optional_fields():
-    data = {"id": 100, "title": "Minimal", "description": None}
-
-    item = DetailedItem(data)
-
-    assert item.id == 100
+def test_detailed_item_size_extraction(sample_detailed_item_data):
+    item = DetailedItem(raw_data=sample_detailed_item_data)
+    assert item.size_title == "44"
 
 
-def test_equality_and_hash(sample_detailed_item_data):
-    data1 = sample_detailed_item_data
-    data2 = sample_detailed_item_data
-
-    item1 = DetailedItem(data1)
-    item2 = DetailedItem(data2)
-
-    assert item1 == item2
-    assert hash(item1) == hash(item2)
+def test_detailed_item_no_size():
+    data = {"id": 1, "plugins": []}
+    item = DetailedItem(raw_data=data)
+    assert item.size_title == ""
