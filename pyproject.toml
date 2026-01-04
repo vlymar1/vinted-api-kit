@@ -68,6 +68,7 @@ lint = "ruff check vinted/ tests/"
 format = "ruff format vinted/ tests/"
 type-check = "mypy vinted/"
 install-dev = "pip install -e ."
+setup-hooks = "pre-commit install"
 all = ["format", "lint", "type-check", "test-cov"]
 
 [tool.hatch.build.targets.wheel]
