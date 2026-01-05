@@ -8,64 +8,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+
+### Changed
+
+
+### Fixed
+
+
+
+## [1.0.0] - 2026-01-05
+
+### Added
 - Multiple cookie storage backends: `json`, `mozilla`, and `pickle`
+- Dataclass-based models (`CatalogItem`, `DetailedItem`) for performance and clarity
+- Custom exception hierarchy to surface network, auth, and validation errors distinctly
 - Automatic locale detection from target Vinted URLs
 - `SortOrder` and `StorageFormat` type literals for improved typing
-- Dataclass-based models for catalog and item representations
-- Custom exception hierarchy for clearer error handling
 
 ### Changed
 - Refactored architecture: separated `api/`, `storage/`, and `models/` layers for better maintainability
 - Default cookie storage format changed to `json` for security hardening
 - SSL verification enabled by default for all HTTP requests
 - Proxy configuration simplified to a single string parameter (`proxy="user:pass@host:port"`)
+- Cookie persistence now uses strategy pattern
 
 ### Fixed
 - JWT token expiration parsing (base64url padding handling)
 - Retry/logging behavior for authentication failures
-
-## [1.0.0] - 2024-12-21
-
-### Breaking Changes
-- **Import path changed**: `from vinted_api_kit import VintedApi` → `from vinted import VintedClient`
-- **Renamed class**: `VintedApi` → `VintedClient` for better naming conventions
-- **Removed parameter**: `locale` (now auto-detected from URL)
-- **Proxy format changed**: `proxies={"http": "..."}` → `proxy="user:pass@host:port"`
-- **Storage format**: New parameter `storage_format` with options: `"pickle"`, `"json"`, `"mozilla"`
-
-### Added
-- Dataclass-based models (`CatalogItem`, `DetailedItem`) for performance and clarity
-- Custom exception hierarchy to surface network, auth, and validation errors distinctly
-- Storage strategy pattern with multiple formats: `pickle`, `json`, and `mozilla`
-- Type hints across the codebase and `SortOrder` Literal for search ordering
-- Automatic locale detection from URL and modular architecture (`api/`, `storage/`, `models/`)
-
-### Changed
-- Proxy configuration simplified to single string parameter
-- Removed unnecessary `sync_headers()` call (not needed with impersonate)
-- Improved error messages with context preservation
-- Better separation of concerns (session, auth, storage)
-- Cookie persistence now uses strategy pattern
-
-### Improved
-- Improved model initialization performance using dataclasses
-- Better memory efficiency and clearer field definitions with dataclasses
-- Cleaner code architecture and increased type safety
-- More maintainable codebase
-
-### Fixed
 - Cookie persistence reliability
 - Proxy handling edge cases
 - Token expiration detection accuracy
-
-### Removed
-- `locale` parameter (auto-detected from URL)
-- Legacy `VintedApi` class name
-
-### Added
-- User profile retrieval functionality
-- Support for fetching user's own items
-- Enhanced error handling for network timeouts
 
 ## [0.1.0.post1] - 2025-08-07
 
@@ -90,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD pipeline with GitHub Actions
 - 80%+ test coverage
 
-[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/vlymar1/vinted-api-kit/compare/v0.1.0...v1.0.0
 [0.1.0.post1]: https://github.com/vlymar1/vinted-api-kit/compare/v0.1.0...v0.1.0.post1
 [0.1.0]: https://github.com/vlymar1/vinted-api-kit/releases/tag/v0.1.0
