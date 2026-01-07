@@ -8,9 +8,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- User profile retrieval functionality
-- Support for fetching user's own items
-- Enhanced error handling for network timeouts
+
+
+### Changed
+
+
+### Fixed
+
+
+
+## [1.0.0] - 2026-01-05
+
+### Added
+- Multiple cookie storage backends: `json`, `mozilla`, and `pickle`
+- Dataclass-based models (`CatalogItem`, `DetailedItem`) for performance and clarity
+- Custom exception hierarchy to surface network, auth, and validation errors distinctly
+- Automatic locale detection from target Vinted URLs
+- `SortOrder` and `StorageFormat` type literals for improved typing
+
+### Changed
+- Refactored architecture: separated `api/`, `storage/`, and `models/` layers for better maintainability
+- Default cookie storage format changed to `json` for security hardening
+- SSL verification enabled by default for all HTTP requests
+- Proxy configuration simplified to a single string parameter (`proxy="user:pass@host:port"`)
+- Cookie persistence now uses strategy pattern
+
+### Fixed
+- JWT token expiration parsing (base64url padding handling)
+- Retry/logging behavior for authentication failures
+- Cookie persistence reliability
+- Proxy handling edge cases
+- Token expiration detection accuracy
 
 ## [0.1.0.post1] - 2025-08-07
 
@@ -35,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD pipeline with GitHub Actions
 - 80%+ test coverage
 
-[Unreleased]: https://github.com/vlymar-dev/vinted-api-kit/compare/v0.1.0...HEAD
-[0.1.0.post1]: https://github.com/vlymar-dev/vinted-api-kit/compare/v0.1.0...v0.1.0.post1
-[0.1.0]: https://github.com/vlymar-dev/vinted-api-kit/releases/tag/v0.1.0
+[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/vlymar1/vinted-api-kit/compare/v0.1.0...v1.0.0
+[0.1.0.post1]: https://github.com/vlymar1/vinted-api-kit/compare/v0.1.0...v0.1.0.post1
+[0.1.0]: https://github.com/vlymar1/vinted-api-kit/releases/tag/v0.1.0
