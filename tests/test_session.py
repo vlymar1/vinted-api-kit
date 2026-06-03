@@ -31,13 +31,37 @@ async def test_session_init_with_proxy():
     assert session.session.proxies == {"http": "http://proxy:8080", "https": "http://proxy:8080"}
 
 
-def test_configure_from_url():
+@pytest.mark.parametrize(
+    "url,expected_base_url,expected_locale,expected_accept_language",
+    [
+        (
+            "https://www.vinted.fr/catalog",
+            "https://www.vinted.fr",
+            "fr",
+            "fr-FR,fr;q=0.9",
+        ),
+        (
+            "https://vinted.com/catalog",
+            "https://vinted.com",
+            "com",
+            "en-US,en;q=0.9",
+        ),
+        (
+            "https://www.vinted.co.uk/catalog",
+            "https://www.vinted.co.uk",
+            "co.uk",
+            "en-GB,en;q=0.9",
+        ),
+    ],
+)
+def test_configure_from_url(url, expected_base_url, expected_locale, expected_accept_language):
     session = HttpSession()
-    session.configure_from_url("https://www.vinted.fr/catalog")
+    session.configure_from_url(url)
 
-    assert session.base_url == "https://www.vinted.fr"
-    assert session.locale == "fr"
-    assert "Accept-Language" in session.session.headers
+    assert session.base_url == expected_base_url
+    assert session.locale == expected_locale
+    assert session.session.headers["Accept-Language"] == expected_accept_language
+    assert session.session.headers["Referer"] == expected_base_url
 
 
 @pytest.mark.asyncio

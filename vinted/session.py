@@ -77,10 +77,14 @@ class HttpSession:
     def configure_from_url(self, url: str) -> None:
         parsed = urlparse(url)
         self.base_url = f"https://{parsed.netloc}"
+        self.locale = None
 
-        domain_parts = parsed.netloc.split(".")
-        if len(domain_parts) > 1:
-            self.locale = domain_parts[-1]
+        host = parsed.netloc.lower()
+        if host.startswith("www."):
+            host = host[4:]
+
+        if host.startswith("vinted."):
+            self.locale = host[len("vinted.") :]
             accept_language = get_accept_language(self.locale)
             self.session.headers.update({"Accept-Language": accept_language})
 
