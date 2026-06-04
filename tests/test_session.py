@@ -155,8 +155,45 @@ async def test_load_cookies_with_storage(mock_storage):
 
 
 @pytest.mark.asyncio
-async def test_clear_cookies(mock_storage):
+async def test_clear_session_cookies(mock_storage):
     session = HttpSession(storage=mock_storage)
-    session._clear_cookies()
+    with patch.object(session.session.cookies, "clear") as clear_mock:
+        session._clear_session_cookies()
 
-    mock_storage.clear.assert_called_once()
+    clear_mock.assert_called_once()
+    mock_storage.clear.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_refresh_cookies_network_error_does_not_clear_storage(mock_storage):
+    session = HttpSession(storage=mock_storage)
+    session.base_url = "https://www.vinted.com"
+
+    with patch.object(session.session.cookies, "clear") as clear_mock:
+        with patch.object(
+            session.session, "head", new=AsyncMock(side_effect=Exception("Network error"))
+        ):
+            with pytest.raises(VintedNetworkError):
+                await session.refresh_cookies()
+
+    clear_mock.assert_called_once()
+    mock_storage.save.assert_not_called()
+    mock_storage.clear.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_refresh_cookies_success_does_not_clear_storage(mock_storage):
+    session = HttpSession(storage=mock_storage)
+    session.base_url = "https://www.vinted.com"
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.raise_for_status = MagicMock()
+
+    with patch.object(session.session.cookies, "clear") as clear_mock:
+        with patch.object(session.session, "head", new=AsyncMock(return_value=mock_response)):
+            await session.refresh_cookies()
+
+    clear_mock.assert_called_once()
+    mock_storage.save.assert_called_once()
+    mock_storage.clear.assert_not_called()

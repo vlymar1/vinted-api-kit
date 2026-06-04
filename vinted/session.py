@@ -97,7 +97,7 @@ class HttpSession:
 
         logger.debug("Refreshing session cookies...")
 
-        self._clear_cookies()
+        self._clear_session_cookies()
 
         self.session.headers.update({"Referer": ""})
 
@@ -116,11 +116,9 @@ class HttpSession:
 
         logger.info("Session cookies refreshed successfully")
 
-    def _clear_cookies(self) -> None:
+    def _clear_session_cookies(self) -> None:
         self.session.cookies.clear()
-        if self.storage:
-            self.storage.clear()
-        logger.debug("Cookies cleared")
+        logger.debug("Session cookies cleared")
 
     def _load_cookies(self) -> bool:
         if not self.storage:
@@ -141,7 +139,6 @@ class HttpSession:
                 logger.info("Access token expired, refreshing cookies")
                 await self.refresh_cookies()
         else:
-            # Если куки не были загружены, то рефрешим
             logger.debug("No saved cookies, refreshing...")
             await self.refresh_cookies()
 
