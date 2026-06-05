@@ -1,7 +1,6 @@
 import pytest
 
-from vinted.constants import VALID_LOCALES
-from vinted.utils import format_proxy_for_log, get_accept_language, validate_locale
+from vinted.utils import format_proxy_for_log, get_accept_language
 
 
 def test_format_proxy_with_auth():
@@ -32,13 +31,3 @@ def test_format_proxy_none():
 def test_get_accept_language(locale, expected):
     result = get_accept_language(locale)
     assert result == expected
-
-
-def test_validate_locale_valid():
-    for locale in VALID_LOCALES:
-        validate_locale(locale)
-
-
-def test_validate_locale_invalid():
-    with pytest.raises(ValueError, match="Invalid locale"):
-        validate_locale("invalid")

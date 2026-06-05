@@ -1,8 +1,10 @@
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
 
 from vinted import VintedClient
+from vinted.exceptions import VintedConfigError
 from vinted.models.item import CatalogItem
 
 
@@ -38,3 +40,14 @@ async def test_client_context_manager():
 async def test_client_proxy_configuration():
     client = VintedClient(proxy="user:pass@proxy.com:8080")
     assert client._session.proxy == "user:pass@proxy.com:8080"
+
+
+def test_client_invalid_storage_format_raises_config_error(temp_cookies_dir):
+    invalid_storage_format = cast(Any, "xml")
+
+    with pytest.raises(VintedConfigError, match="Invalid storage_format"):
+        VintedClient(
+            cookies_dir=temp_cookies_dir,
+            persist_cookies=True,
+            storage_format=invalid_storage_format,
+        )

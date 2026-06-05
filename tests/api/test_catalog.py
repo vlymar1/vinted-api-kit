@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from vinted.api.catalog import CatalogAPI
+from vinted.exceptions import VintedValidationError
 from vinted.models.item import CatalogItem
 
 
@@ -69,6 +70,38 @@ async def test_catalog_search_with_order(mock_session):
 
     call_args = mock_session.request.call_args
     assert "order" in call_args.kwargs["params"]
+
+
+@pytest.mark.asyncio
+async def test_catalog_search_allows_api_catalog_endpoint(mock_session):
+    catalog = CatalogAPI(mock_session)
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"items": []}
+    mock_session.request = AsyncMock(return_value=mock_response)
+
+    await catalog.search(url="https://example.test/api/v2/catalog/items?search_text=nike")
+
+    mock_session.configure_from_url.assert_called_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "url",
+    [
+        "not-a-url",
+        "/catalog?search_text=nike",
+        "ftp://www.vinted.com/catalog",
+        "https://www.vinted.com/items/123-test-item",
+    ],
+)
+async def test_catalog_search_invalid_url_raises_validation_error(mock_session, url):
+    catalog = CatalogAPI(mock_session)
+
+    with pytest.raises(VintedValidationError):
+        await catalog.search(url=url)
+
+    mock_session.configure_from_url.assert_not_called()
 
 
 def test_extract_catalog_id_from_path():

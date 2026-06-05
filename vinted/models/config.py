@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..constants import StorageFormat
+from ..exceptions import VintedConfigError
 
 
 @dataclass
@@ -35,4 +36,7 @@ class ClientConfig:
         if isinstance(self.cookies_dir, str):
             self.cookies_dir = Path(self.cookies_dir)
 
-        self.cookies_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.cookies_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            raise VintedConfigError(f"Invalid cookies_dir '{self.cookies_dir}': {e}") from e

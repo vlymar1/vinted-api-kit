@@ -57,8 +57,6 @@ LOCALE_TO_ACCEPT_LANGUAGE = {
     "com": "en-US",
 }
 
-VINTED_BASE_URL_TEMPLATE = "https://www.vinted.{locale}"
-
 SortOrder = Literal["newest_first", "relevance", "price_high_to_low", "price_low_to_high"]
 
 StorageFormat = Literal["json", "pickle", "mozilla"]

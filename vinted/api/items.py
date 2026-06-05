@@ -9,6 +9,8 @@ import logging
 from typing import Any, Union
 from urllib.parse import urlparse
 
+from vinted.exceptions import VintedValidationError
+
 from ..models import DetailedItem
 from .base import BaseAPI
 
@@ -62,5 +64,17 @@ class ItemsAPI(BaseAPI):
         The public path is expected to be `/items/<id>-...` or similar; the
         method extracts the numeric id component.
         """
-        path = urlparse(url).path
-        return path.split("/")[2].split("-")[0]
+        parsed = urlparse(url)
+        path_parts = parsed.path.strip("/").split("/")
+
+        if parsed.scheme not in ("http", "https") or not parsed.netloc:
+            raise VintedValidationError("Invalid item URL: expected an absolute HTTP(S) URL")
+
+        if len(path_parts) < 2 or path_parts[0] != "items":
+            raise VintedValidationError("Invalid item URL: expected path '/items/<id>'")
+
+        product_id = path_parts[1].split("-")[0]
+        if not product_id.isdigit():
+            raise VintedValidationError("Invalid item URL: item id must be numeric")
+
+        return product_id

@@ -4,7 +4,7 @@ Small helpers used across the library for formatting proxy strings and
 resolving Accept-Language headers.
 """
 
-from .constants import LOCALE_TO_ACCEPT_LANGUAGE, VALID_LOCALES
+from .constants import LOCALE_TO_ACCEPT_LANGUAGE
 
 
 def format_proxy_for_log(proxy: str | None) -> str:
@@ -26,18 +26,6 @@ def format_proxy_for_log(proxy: str | None) -> str:
         parts = proxy.split("@")
         return "***@%s" % parts[-1]
     return proxy
-
-
-def validate_locale(locale: str) -> None:
-    """Validate that `locale` is supported.
-
-    Raises `ValueError` when the provided `locale` is not in
-    `VALID_LOCALES`.
-    """
-    if locale not in VALID_LOCALES:
-        raise ValueError(
-            "Invalid locale '%s'. Valid options: %s" % (locale, ", ".join(VALID_LOCALES))
-        )
 
 
 def get_accept_language(locale: str) -> str:

@@ -12,6 +12,7 @@ from typing import Type, Union
 from .api.catalog import CatalogAPI
 from .api.items import ItemsAPI
 from .constants import SortOrder, StorageFormat
+from .exceptions import VintedConfigError
 from .models.config import ClientConfig
 from .models.item import CatalogItem, DetailedItem
 from .session import HttpSession
@@ -82,6 +83,12 @@ class VintedClient:
             "mozilla": MozillaStorage,
         }
 
+        if config.storage_format not in storage_map:
+            valid_formats = ", ".join(storage_map)
+            raise VintedConfigError(
+                f"Invalid storage_format '{config.storage_format}'. Valid options: {valid_formats}"
+            )
+
         storage_class = storage_map[config.storage_format]
         return storage_class(filepath)
 
@@ -109,6 +116,12 @@ class VintedClient:
             "json": ".json",
             "mozilla": ".txt",
         }
+
+        if config.storage_format not in extensions:
+            valid_formats = ", ".join(extensions)
+            raise VintedConfigError(
+                f"Invalid storage_format '{config.storage_format}'. Valid options: {valid_formats}"
+            )
 
         filename += extensions[config.storage_format]
 

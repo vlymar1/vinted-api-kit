@@ -12,12 +12,19 @@ from curl_cffi import AsyncSession
 from curl_cffi.requests import Response
 from curl_cffi.requests.exceptions import HTTPError as CurlHTTPError
 
-from vinted.exceptions import VintedAPIError, VintedAuthError, VintedNetworkError
+from vinted.exceptions import (
+    VintedAPIError,
+    VintedAuthError,
+    VintedConfigError,
+    VintedNetworkError,
+    VintedRateLimitError,
+)
 
 from .auth import AuthManager
 from .constants import (
     DEFAULT_HEADERS,
     HTTP_STATUS_FORBIDDEN,
+    HTTP_STATUS_RATE_LIMIT,
     HTTP_STATUS_UNAUTHORIZED,
 )
 from .storage import CookieStorage
@@ -93,7 +100,7 @@ class HttpSession:
 
     async def refresh_cookies(self) -> None:
         if not self.base_url:
-            raise VintedAPIError("base_url not configured")
+            raise VintedConfigError("base_url not configured")
 
         logger.debug("Refreshing session cookies...")
 
@@ -112,7 +119,10 @@ class HttpSession:
         logger.debug("Fresh cookies received: %d cookies", len(self.session.cookies))
 
         if self.storage:
-            self.storage.save(self.session.cookies.jar)
+            try:
+                self.storage.save(self.session.cookies.jar)
+            except Exception as e:
+                raise VintedConfigError("Failed to save cookies") from e
 
         logger.info("Session cookies refreshed successfully")
 
@@ -174,6 +184,19 @@ class HttpSession:
                 )
             except Exception as e:
                 raise VintedNetworkError("Network error on retry", e)
+        if response.status_code == HTTP_STATUS_RATE_LIMIT:
+            raise VintedRateLimitError(
+                f"HTTP {response.status_code}: {response.reason}",
+                status_code=response.status_code,
+                response=response,
+            )
+
+        if response.status_code in (HTTP_STATUS_UNAUTHORIZED, HTTP_STATUS_FORBIDDEN):
+            raise VintedAuthError(
+                f"Authentication failed after retry: HTTP {response.status_code}: {response.reason}",
+                status_code=response.status_code,
+                response=response,
+            )
 
         if response.status_code >= 400:
             raise VintedAPIError(

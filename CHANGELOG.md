@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Locale detection now correctly handles multi-part Vinted domains such as `vinted.co.uk` and sets the expected `Accept-Language` header
 - Cookie refresh no longer deletes persisted session cookies before a successful refresh and save completes
+- Runtime exceptions now match the documented public contract for configuration, validation, rate-limit, authentication, and cookie save failures
 
 
 ## [1.0.0] - 2026-01-05

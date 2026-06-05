@@ -4,6 +4,8 @@ This module provides a small base class that stores a shared
 `HttpSession` instance used by higher-level API wrappers.
 """
 
+from vinted.exceptions import VintedConfigError
+
 from ..session import HttpSession
 
 
@@ -22,11 +24,11 @@ class BaseAPI:
         """Return configured base URL for API requests.
 
         Raises:
-            ValueError: If the session `base_url` is not configured.
+            VintedConfigError: If the session `base_url` is not configured.
 
         Returns:
             The base URL (scheme + host) derived from the session.
         """
         if not self.session.base_url:
-            raise ValueError("Session base_url not configured")
+            raise VintedConfigError("Session base_url not configured")
         return self.session.base_url
