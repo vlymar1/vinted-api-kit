@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from vinted.api.items import ItemsAPI
+from vinted.exceptions import VintedValidationError
 from vinted.models.item import DetailedItem
 
 
@@ -62,3 +63,20 @@ def test_extract_product_id_complex():
     )
 
     assert product_id == "9876"
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "not-a-url",
+        "https://www.vinted.com/catalog/123",
+        "https://www.vinted.com/items/",
+        "https://www.vinted.com/items/not-numeric",
+        "/items/123-test-item",
+    ],
+)
+def test_extract_product_id_invalid_url_raises_validation_error(url):
+    items_api = ItemsAPI(MagicMock())
+
+    with pytest.raises(VintedValidationError):
+        items_api._extract_product_id(url)

@@ -10,6 +10,8 @@ import time
 from typing import Any, Union
 from urllib.parse import parse_qsl, urlparse
 
+from vinted.exceptions import VintedValidationError
+
 from ..constants import SortOrder
 from ..models import CatalogItem
 from .base import BaseAPI
@@ -46,6 +48,7 @@ class CatalogAPI(BaseAPI):
         Returns:
             List of `CatalogItem` instances or raw item dicts.
         """
+        self._validate_catalog_url(url)
         self.session.configure_from_url(url)
         api_url = f"{self.base_url}/api/v2/catalog/items"
 
@@ -100,6 +103,20 @@ class CatalogAPI(BaseAPI):
         }
 
         return {k: v for k, v in params.items() if v}
+
+    @staticmethod
+    def _validate_catalog_url(url: str) -> None:
+        """Validate basic catalog URL shape without restricting the domain."""
+        parsed = urlparse(url)
+
+        if parsed.scheme not in ("http", "https") or not parsed.netloc:
+            raise VintedValidationError("Invalid catalog URL: expected an absolute HTTP(S) URL")
+
+        path = parsed.path.rstrip("/")
+        if path and not (path.startswith("/catalog") or path == "/api/v2/catalog/items"):
+            raise VintedValidationError(
+                "Invalid catalog URL: expected path '/catalog' or '/api/v2/catalog/items'"
+            )
 
     @staticmethod
     def _extract_catalog_id(path: str) -> int | None:

@@ -12,12 +12,19 @@ from curl_cffi import AsyncSession
 from curl_cffi.requests import Response
 from curl_cffi.requests.exceptions import HTTPError as CurlHTTPError
 
-from vinted.exceptions import VintedAPIError, VintedAuthError, VintedNetworkError
+from vinted.exceptions import (
+    VintedAPIError,
+    VintedAuthError,
+    VintedConfigError,
+    VintedNetworkError,
+    VintedRateLimitError,
+)
 
 from .auth import AuthManager
 from .constants import (
     DEFAULT_HEADERS,
     HTTP_STATUS_FORBIDDEN,
+    HTTP_STATUS_RATE_LIMIT,
     HTTP_STATUS_UNAUTHORIZED,
 )
 from .storage import CookieStorage
@@ -77,10 +84,14 @@ class HttpSession:
     def configure_from_url(self, url: str) -> None:
         parsed = urlparse(url)
         self.base_url = f"https://{parsed.netloc}"
+        self.locale = None
 
-        domain_parts = parsed.netloc.split(".")
-        if len(domain_parts) > 1:
-            self.locale = domain_parts[-1]
+        host = parsed.netloc.lower()
+        if host.startswith("www."):
+            host = host[4:]
+
+        if host.startswith("vinted."):
+            self.locale = host[len("vinted.") :]
             accept_language = get_accept_language(self.locale)
             self.session.headers.update({"Accept-Language": accept_language})
 
@@ -89,11 +100,11 @@ class HttpSession:
 
     async def refresh_cookies(self) -> None:
         if not self.base_url:
-            raise VintedAPIError("base_url not configured")
+            raise VintedConfigError("base_url not configured")
 
         logger.debug("Refreshing session cookies...")
 
-        self._clear_cookies()
+        self._clear_session_cookies()
 
         self.session.headers.update({"Referer": ""})
 
@@ -108,15 +119,16 @@ class HttpSession:
         logger.debug("Fresh cookies received: %d cookies", len(self.session.cookies))
 
         if self.storage:
-            self.storage.save(self.session.cookies.jar)
+            try:
+                self.storage.save(self.session.cookies.jar)
+            except Exception as e:
+                raise VintedConfigError("Failed to save cookies") from e
 
         logger.info("Session cookies refreshed successfully")
 
-    def _clear_cookies(self) -> None:
+    def _clear_session_cookies(self) -> None:
         self.session.cookies.clear()
-        if self.storage:
-            self.storage.clear()
-        logger.debug("Cookies cleared")
+        logger.debug("Session cookies cleared")
 
     def _load_cookies(self) -> bool:
         if not self.storage:
@@ -137,7 +149,6 @@ class HttpSession:
                 logger.info("Access token expired, refreshing cookies")
                 await self.refresh_cookies()
         else:
-            # Если куки не были загружены, то рефрешим
             logger.debug("No saved cookies, refreshing...")
             await self.refresh_cookies()
 
@@ -173,6 +184,19 @@ class HttpSession:
                 )
             except Exception as e:
                 raise VintedNetworkError("Network error on retry", e)
+        if response.status_code == HTTP_STATUS_RATE_LIMIT:
+            raise VintedRateLimitError(
+                f"HTTP {response.status_code}: {response.reason}",
+                status_code=response.status_code,
+                response=response,
+            )
+
+        if response.status_code in (HTTP_STATUS_UNAUTHORIZED, HTTP_STATUS_FORBIDDEN):
+            raise VintedAuthError(
+                f"Authentication failed after retry: HTTP {response.status_code}: {response.reason}",
+                status_code=response.status_code,
+                response=response,
+            )
 
         if response.status_code >= 400:
             raise VintedAPIError(

@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from vinted.exceptions import VintedConfigError
 from vinted.models.config import ClientConfig
 
 
@@ -32,6 +33,14 @@ def test_config_creates_cookies_dir(tmp_path):
     _ = ClientConfig(cookies_dir=cookies_dir)
 
     assert cookies_dir.exists()
+
+
+def test_config_file_path_as_cookies_dir_raises_config_error(tmp_path):
+    cookies_file = tmp_path / "cookies"
+    cookies_file.write_text("")
+
+    with pytest.raises(VintedConfigError, match="Invalid cookies_dir"):
+        ClientConfig(cookies_dir=cookies_file)
 
 
 def test_config_string_path_conversion():
