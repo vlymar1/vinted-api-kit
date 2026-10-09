@@ -28,7 +28,7 @@ from .constants import (
     HTTP_STATUS_UNAUTHORIZED,
 )
 from .storage import CookieStorage
-from .utils import format_proxy_for_log, get_accept_language
+from .utils import format_proxy_for_log, get_accept_language, get_locale_code
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +93,10 @@ class HttpSession:
         if host.startswith("vinted."):
             self.locale = host[len("vinted.") :]
             accept_language = get_accept_language(self.locale)
-            self.session.headers.update({"Accept-Language": accept_language})
+            # `locale` selects the marketplace whose items the catalog returns
+            self.session.headers.update(
+                {"Accept-Language": accept_language, "locale": get_locale_code(self.locale)}
+            )
 
         self.session.headers.update({"Referer": self.base_url})
         logger.debug("Configured: base_url=%s, locale=%s", self.base_url, self.locale)
