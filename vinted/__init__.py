@@ -4,6 +4,7 @@ from vinted.exceptions import (
     VintedAPIError,
     VintedAuthError,
     VintedConfigError,
+    VintedDeprecatedError,
     VintedError,
     VintedNetworkError,
     VintedRateLimitError,
@@ -11,7 +12,7 @@ from vinted.exceptions import (
 )
 from vinted.models.item import CatalogItem, DetailedItem
 
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 
 __all__ = [
     "VintedClient",
@@ -24,6 +25,7 @@ __all__ = [
     "VintedNetworkError",
     "VintedConfigError",
     "VintedValidationError",
+    "VintedDeprecatedError",
     "SortOrder",
     "StorageFormat",
 ]

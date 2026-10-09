@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
+from ..exceptions import VintedDeprecatedError
+
 
 @dataclass
 class CatalogItem:
@@ -15,7 +17,12 @@ class CatalogItem:
 
     The class stores the original `raw_data` (hidden from the repr)
     and extracts commonly-used fields like `id`, `title`, `price` and
-    `photo` for convenience.
+    `photo` for convenience. Brand, size and condition come from
+    `item_box` in the language of the Vinted domain.
+
+    `created_at_ts` and `raw_timestamp` are deprecated: the catalog API
+    no longer returns the photo timestamp, so they always hold epoch
+    and 0. They will be removed in the next major release.
     """
 
     raw_data: dict[str, Any] = field(repr=False)
@@ -23,8 +30,10 @@ class CatalogItem:
     title: str = field(init=False)
     brand_title: str = field(init=False)
     size_title: str = field(init=False)
+    condition: str = field(init=False)
     currency: str = field(init=False)
     price: float = field(init=False)
+    total_item_price: float = field(init=False)
     photo: str = field(init=False)
     url: str = field(init=False)
     created_at_ts: datetime = field(init=False)
@@ -33,12 +42,19 @@ class CatalogItem:
     def __post_init__(self):
         self.id = self.raw_data.get("id", 0)
         self.title = self.raw_data.get("title", "")
-        self.brand_title = self.raw_data.get("brand_title", "")
-        self.size_title = self.raw_data.get("size_title", "")
+
+        item_box = self.raw_data.get("item_box") or {}
+        self.brand_title = item_box.get("first_line", "")
+        # second_line is "<size> · <condition>", the size part is optional
+        *sizes, self.condition = item_box.get("second_line", "").split(" · ")
+        self.size_title = sizes[0] if sizes else ""
 
         price = self.raw_data.get("price") or {}
         self.currency = price.get("currency_code", "")
-        self.price = price.get("amount", 0.0)
+        self.price = float(price.get("amount") or 0.0)
+
+        total_item_price = self.raw_data.get("total_item_price") or {}
+        self.total_item_price = float(total_item_price.get("amount") or 0.0)
 
         photo = self.raw_data.get("photo") or {}
         self.photo = photo.get("url", "")
@@ -69,13 +85,19 @@ class CatalogItem:
         return hash(self.id)
 
     def is_new_item(self, minutes: int = 1) -> bool:
-        """Return True when the item was created within `minutes`.
+        """Deprecated: always raises `VintedDeprecatedError`.
+
+        The check compared `created_at_ts` with the current time, but the
+        catalog API no longer returns the photo timestamp. The method will
+        be removed in the next major release.
 
         Args:
             minutes: Age threshold in minutes (default: 1).
         """
-        delta = datetime.now(timezone.utc) - self.created_at_ts
-        return delta.total_seconds() < minutes * 60
+        raise VintedDeprecatedError(
+            "CatalogItem.is_new_item() no longer works: the Vinted catalog API "
+            "does not return item timestamps anymore"
+        )
 
 
 @dataclass

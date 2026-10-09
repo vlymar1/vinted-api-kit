@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vinted-api-kit"
-version = "1.0.1"
+version = "1.1.0"
 description = "Lightweight asynchronous Python client library for accessing Vinted API and scraping item data."
 authors = [
     {name = "Lymar Volodymyr",email = "volodymyr.lymar1@gmail.com"},
@@ -70,6 +70,9 @@ all = ["format", "lint", "type-check", "test-cov"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["vinted"]
+
+[tool.hatch.build.targets.sdist]
+include = ["vinted", "README.md", "LICENSE"]
 
 [tool.ruff]
 exclude = [
