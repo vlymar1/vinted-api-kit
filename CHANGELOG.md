@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+
+### Changed
+
+
+### Fixed
+
+
+## [1.1.0] - 2026-10-09
+
+### Added
+
 - `patterns_ids[]` catalog filter support
 - `CatalogItem.condition` and `CatalogItem.total_item_price`
 - `VintedDeprecatedError` for features that no longer work with the Vinted API
@@ -87,7 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD pipeline with GitHub Actions
 - 80%+ test coverage
 
-[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/vlymar1/vinted-api-kit/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/vlymar1/vinted-api-kit/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/vlymar1/vinted-api-kit/compare/v0.1.0...v1.0.0
 [0.1.0.post1]: https://github.com/vlymar1/vinted-api-kit/compare/v0.1.0...v0.1.0.post1
