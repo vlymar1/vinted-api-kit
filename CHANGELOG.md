@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
+- `VintedClient.item_details()` now raises `VintedDeprecatedError`: Vinted removed the item details API
 - `CatalogItem.is_new_item()` now raises `VintedDeprecatedError`, `created_at_ts` and `raw_timestamp` always hold epoch and 0; all three will be removed in the next major release
 
 ### Fixed

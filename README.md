@@ -18,7 +18,6 @@
 - 🚀 **Asynchronous** - Built with asyncio for high performance
 - 🌍 **Auto-locale Detection** - Automatically detects locale from URL
 - 🔍 **Item Search** - Search catalog with filters, sorting and pagination
-- 📦 **Item Details** - Get complete item information with rich metadata
 - 🍪 **Cookie Persistence** - Automatic session management with multiple storage formats
 - 🔐 **Proxy Support** - Simple string-based proxy configuration
 - 📊 **Type Hints** - Full typing support with Literal types for better IDE experience
@@ -133,22 +132,7 @@ raw_items = await client.search_items(
 
 ### Item Details
 
-> Fetch detailed information about a specific item:
-```python
-item = await client.item_details(
-    url="https://www.vinted.com/items/1234567890"
-)
-
-print(f"Title: {item.title}")
-print(f"Brand: {item.brand_title}")
-print(f"Size: {item.size_title}")
-print(f"Price: {item.price} {item.currency}")
-print(f"Total: {item.total_item_price}")
-print(f"Description: {item.description}")
-
-# Or get raw JSON
-raw_item = await client.item_details(url, raw_data=True)
-```
+> ⚠️ **Deprecated since 1.1.0.** Vinted removed the item details API, so `item_details()` raises `VintedDeprecatedError`.
 
 ### Parameters
 
@@ -320,8 +304,7 @@ vinted-api-kit/
 │   ├── constants.py    # Constants and type definitions
 │   ├── exceptions.py   # Custom exceptions
 │   └── utils.py        # Utility functions
-├── tests/              # Test suite
-└── examples/           # Usage examples
+└── tests/              # Test suite
 ```
 
 ### Testing

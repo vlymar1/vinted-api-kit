@@ -3,8 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from vinted.api.items import ItemsAPI
-from vinted.exceptions import VintedValidationError
-from vinted.models.item import DetailedItem
+from vinted.exceptions import VintedDeprecatedError, VintedValidationError
 
 
 @pytest.fixture
@@ -16,35 +15,17 @@ def mock_session():
 
 
 @pytest.mark.asyncio
-async def test_items_get_details(mock_session, sample_detailed_item_data):
+@pytest.mark.parametrize("raw_data", [False, True])
+async def test_items_get_details_raises_deprecated_error(mock_session, raw_data):
     items_api = ItemsAPI(mock_session)
+    mock_session.request = AsyncMock()
 
-    mock_response = MagicMock()
-    mock_response.json.return_value = {"item": sample_detailed_item_data}
+    with pytest.raises(VintedDeprecatedError):
+        await items_api.get_details(
+            url="https://www.vinted.com/items/123-test-item", raw_data=raw_data
+        )
 
-    mock_session.request = AsyncMock(return_value=mock_response)
-
-    item = await items_api.get_details(url="https://www.vinted.com/items/123-test-item")
-
-    assert isinstance(item, DetailedItem)
-    assert item.id == 456
-
-
-@pytest.mark.asyncio
-async def test_items_get_details_raw(mock_session, sample_detailed_item_data):
-    items_api = ItemsAPI(mock_session)
-
-    mock_response = MagicMock()
-    mock_response.json.return_value = {"item": sample_detailed_item_data}
-
-    mock_session.request = AsyncMock(return_value=mock_response)
-
-    item = await items_api.get_details(
-        url="https://www.vinted.com/items/123-test-item", raw_data=True
-    )
-
-    assert isinstance(item, dict)
-    assert item["id"] == 456
+    mock_session.request.assert_not_called()
 
 
 def test_extract_product_id():

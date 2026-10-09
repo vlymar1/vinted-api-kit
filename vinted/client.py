@@ -163,14 +163,13 @@ class VintedClient:
         url: str,
         raw_data: bool = False,
     ) -> Union[DetailedItem, dict]:
-        """Fetch item details by URL.
+        """Deprecated: always raises `VintedDeprecatedError`.
+
+        Vinted removed the item details API endpoint.
 
         Args:
             url: Item page URL or API endpoint.
             raw_data: When True returns raw dict instead of `DetailedItem`.
-
-        Returns:
-            `DetailedItem` or raw dict when `raw_data` is True.
         """
         return await self._items.get_details(url=url, raw_data=raw_data)
 
