@@ -71,6 +71,9 @@ all = ["format", "lint", "type-check", "test-cov"]
 [tool.hatch.build.targets.wheel]
 packages = ["vinted"]
 
+[tool.hatch.build.targets.sdist]
+include = ["vinted", "README.md", "LICENSE"]
+
 [tool.ruff]
 exclude = [
     ".git",
