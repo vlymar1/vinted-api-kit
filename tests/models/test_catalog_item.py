@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 import pytest
 
+from vinted.exceptions import VintedDeprecatedError
 from vinted.models.item import CatalogItem
 
 
@@ -12,12 +13,27 @@ def test_catalog_item_creation(sample_catalog_item_data):
     assert item.title == "Nike Air Max"
     assert item.brand_title == "Nike"
     assert item.size_title == "42"
+    assert item.condition == "Very good"
     assert item.currency == "EUR"
     assert item.price == 50.0
+    assert item.total_item_price == 53.2
     assert item.photo == "https://example.com/photo.jpg"
-    assert item.url == "https://vinted.com/items/123-nike-air-max"
-    assert isinstance(item.created_at_ts, datetime)
-    assert item.raw_timestamp == 1734796339
+    assert item.url == "/items/123-nike-air-max"
+
+
+def test_catalog_item_deprecated_timestamps(sample_catalog_item_data):
+    item = CatalogItem(raw_data=sample_catalog_item_data)
+
+    assert item.created_at_ts == datetime.fromtimestamp(0, tz=timezone.utc)
+    assert item.raw_timestamp == 0
+
+
+def test_catalog_item_without_size(sample_catalog_item_data):
+    data = {**sample_catalog_item_data, "item_box": {"first_line": "Nike", "second_line": "Good"}}
+
+    item = CatalogItem(raw_data=data)
+    assert item.size_title == ""
+    assert item.condition == "Good"
 
 
 def test_catalog_item_equality(sample_catalog_item_data):
@@ -37,15 +53,16 @@ def test_catalog_item_hash(sample_catalog_item_data):
     assert len({item1, item2}) == 1
 
 
-def test_catalog_item_is_new(sample_catalog_item_data):
-    data = {**sample_catalog_item_data}
-    data["photo"]["high_resolution"]["timestamp"] = int(datetime.now(timezone.utc).timestamp())
+def test_catalog_item_is_new_raises_deprecated_error(sample_catalog_item_data):
+    item = CatalogItem(raw_data=sample_catalog_item_data)
 
-    item = CatalogItem(raw_data=data)
-    assert item.is_new_item(minutes=1) is True
+    with pytest.raises(VintedDeprecatedError):
+        item.is_new_item(minutes=1)
 
 
-@pytest.mark.parametrize("missing_field", ["price", "photo", "url"])
+@pytest.mark.parametrize(
+    "missing_field", ["price", "total_item_price", "photo", "url", "item_box"]
+)
 def test_catalog_item_with_missing_fields(sample_catalog_item_data, missing_field):
     data = {**sample_catalog_item_data}
     del data[missing_field]

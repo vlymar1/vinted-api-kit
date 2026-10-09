@@ -59,3 +59,7 @@ class VintedConfigError(VintedError):
 
 class VintedValidationError(VintedError):
     """Raised when input validation fails."""
+
+
+class VintedDeprecatedError(VintedError):
+    """Raised when a deprecated feature no longer works with the Vinted API."""

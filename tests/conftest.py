@@ -9,14 +9,14 @@ def sample_catalog_item_data():
     return {
         "id": 123,
         "title": "Nike Air Max",
-        "brand_title": "Nike",
-        "size_title": "42",
-        "price": {"amount": 50.0, "currency_code": "EUR"},
+        "item_box": {"first_line": "Nike", "second_line": "42 · Very good"},
+        "price": {"amount": "50.00", "currency_code": "EUR"},
+        "total_item_price": {"amount": "53.20", "currency_code": "EUR"},
         "photo": {
             "url": "https://example.com/photo.jpg",
-            "high_resolution": {"timestamp": 1734796339},
+            "high_resolution": {"id": "abc", "orientation": None},
         },
-        "url": "https://vinted.com/items/123-nike-air-max",
+        "url": "/items/123-nike-air-max",
     }
 
 

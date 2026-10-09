@@ -6,10 +6,10 @@ URL and returns either a parsed `DetailedItem` or raw JSON.
 """
 
 import logging
-from typing import Any, Union
+from typing import Union
 from urllib.parse import urlparse
 
-from vinted.exceptions import VintedValidationError
+from vinted.exceptions import VintedDeprecatedError, VintedValidationError
 
 from ..models import DetailedItem
 from .base import BaseAPI
@@ -29,33 +29,18 @@ class ItemsAPI(BaseAPI):
         url: str,
         raw_data: bool = False,
     ) -> Union[DetailedItem, dict]:
-        """Fetch item details.
+        """Deprecated: always raises `VintedDeprecatedError`.
+
+        Vinted removed the item details API endpoint.
 
         Args:
             url: Public Vinted item URL.
             raw_data: If True, return raw JSON dictionary instead of
                 a `DetailedItem` instance.
-
-        Returns:
-            `DetailedItem` or raw dict depending on `raw_data`.
         """
-        self.session.configure_from_url(url)
-
-        product_id = self._extract_product_id(url)
-        api_url = f"{self.base_url}/api/v2/items/{product_id}/details"
-
-        logger.debug("Fetching item details: %s", api_url)
-
-        response = await self.session.request(api_url)
-        data = response.json()
-        item_data: dict[Any, Any] = data.get("item", {})
-
-        logger.debug("Item details fetched successfully")
-
-        if raw_data:
-            return item_data
-
-        return DetailedItem(raw_data=item_data)
+        raise VintedDeprecatedError(
+            "item_details() no longer works: Vinted removed the item details API"
+        )
 
     @staticmethod
     def _extract_product_id(url: str) -> str:

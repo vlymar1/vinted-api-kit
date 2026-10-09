@@ -9,11 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `patterns_ids[]` catalog filter support
+- `CatalogItem.condition` and `CatalogItem.total_item_price`
+- `VintedDeprecatedError` for features that no longer work with the Vinted API
 
 ### Changed
 
+- Catalog search uses the new `svc-catalogue/items` endpoint with `attribute_ids[...]` filters and sends the `locale` header
+- `CatalogItem.brand_title`, `size_title` and `condition` are read from `item_box` in the language of the Vinted domain
+- `CatalogItem.price` is always a `float` and `CatalogItem.url` is an absolute URL
+- `country_ids[]`, `city_ids[]` and `disposal[]` filters are no longer sent, the API does not support them
+- Catalog URLs with the `/api/v2/catalog/items` path are rejected
+
+### Deprecated
+
+- `VintedClient.item_details()` now raises `VintedDeprecatedError`: Vinted removed the item details API
+- `CatalogItem.is_new_item()` now raises `VintedDeprecatedError`, `created_at_ts` and `raw_timestamp` always hold epoch and 0; all three will be removed in the next major release
 
 ### Fixed
+
+- Catalog search works again after Vinted removed `/api/v2/catalog/items`
+- `status_ids[]` filter from catalog URLs is applied
 
 
 ## [1.0.1] - 2026-06-06

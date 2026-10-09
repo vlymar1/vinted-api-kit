@@ -28,12 +28,17 @@ def format_proxy_for_log(proxy: str | None) -> str:
     return proxy
 
 
+def get_locale_code(locale: str) -> str:
+    """Return the full locale code for `locale` (e.g. "sk" -> "sk-SK")."""
+    return LOCALE_TO_ACCEPT_LANGUAGE.get(locale, "en-US")
+
+
 def get_accept_language(locale: str) -> str:
     """Return an Accept-Language header value for `locale`.
 
     The returned value contains the full locale code and a fallback
     language prefix with a lower q-value.
     """
-    locale_code = LOCALE_TO_ACCEPT_LANGUAGE.get(locale, "en-US")
+    locale_code = get_locale_code(locale)
     lang_prefix = locale_code.split("-")[0]
     return "%s,%s;q=0.9" % (locale_code, lang_prefix)

@@ -4,6 +4,7 @@ from vinted.exceptions import (
     VintedAPIError,
     VintedAuthError,
     VintedConfigError,
+    VintedDeprecatedError,
     VintedError,
     VintedNetworkError,
     VintedRateLimitError,
@@ -24,6 +25,7 @@ __all__ = [
     "VintedNetworkError",
     "VintedConfigError",
     "VintedValidationError",
+    "VintedDeprecatedError",
     "SortOrder",
     "StorageFormat",
 ]
