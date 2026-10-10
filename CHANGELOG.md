@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Catalog search uses the `api.` subdomain; the `/web/gateway` path now returns 404
 
 ## [1.1.0] - 2026-10-09
 

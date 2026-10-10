@@ -40,7 +40,7 @@ async def test_catalog_search_basic(mock_session):
     assert items[0].id == 1
     assert items[0].url == "https://www.vinted.com/items/1-test-item"
     assert mock_session.request.call_args.args[0] == (
-        "https://www.vinted.com/web/gateway/svc-catalogue/items"
+        "https://api.www.vinted.com/svc-catalogue/items"
     )
 
 
@@ -160,3 +160,18 @@ def test_build_params_catalog_id_from_path_and_legacy_status():
 
     assert params["attribute_ids[catalog]"] == "1904"
     assert params["attribute_ids[status]"] == "2"
+
+
+@pytest.mark.parametrize(
+    ("base_url", "expected"),
+    [
+        ("https://www.vinted.sk", "https://api.vinted.sk"),
+        ("https://www.vinted.co.uk", "https://api.vinted.co.uk"),
+        ("https://www.vinted.com", "https://api.www.vinted.com"),
+    ],
+)
+def test_api_gateway_url(mock_session, base_url, expected):
+    mock_session.base_url = base_url
+    catalog = CatalogAPI(mock_session)
+
+    assert catalog._api_gateway_url() == expected
