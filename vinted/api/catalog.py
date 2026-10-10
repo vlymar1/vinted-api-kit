@@ -50,7 +50,7 @@ class CatalogAPI(BaseAPI):
         """
         self._validate_catalog_url(url)
         self.session.configure_from_url(url)
-        api_url = f"{self.base_url}/web/gateway/svc-catalogue/items"
+        api_url = f"{self._api_gateway_url()}/svc-catalogue/items"
 
         params = self._build_params(url, per_page, page)
         params["time"] = timestamp or int(time.time())
@@ -74,6 +74,16 @@ class CatalogAPI(BaseAPI):
             catalog_item.url = urljoin(f"{self.base_url}/", catalog_item.url)
 
         return catalog_items
+
+    def _api_gateway_url(self) -> str:
+        """Return the API gateway URL for the configured domain.
+
+        The gateway lives on the `api.` subdomain; vinted.com keeps `www.` in it.
+        """
+        host = urlparse(self.base_url).netloc.lower().removeprefix("www.")
+        if host == "vinted.com":
+            host = f"www.{host}"
+        return f"https://api.{host}"
 
     def _build_params(self, url: str, per_page: int, page: int) -> dict:
         """Build API query params from a public catalog URL.
