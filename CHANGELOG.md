@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+
+## [1.1.1] - 2026-10-10
+
+### Fixed
+
 - Catalog search uses the `api.` subdomain; the `/web/gateway` path now returns 404
 
 ## [1.1.0] - 2026-10-09
@@ -99,7 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD pipeline with GitHub Actions
 - 80%+ test coverage
 
-[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/vlymar1/vinted-api-kit/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/vlymar1/vinted-api-kit/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/vlymar1/vinted-api-kit/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/vlymar1/vinted-api-kit/compare/v0.1.0...v1.0.0
