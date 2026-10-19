@@ -9,15 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+
+### Changed
+
+
+### Fixed
+
+
+## [1.2.0] - 2026-10-19
+
+### Added
+
 - `VintedClient.seller_info()` and the `Seller` model for seller profiles
 - `VintedClient.seller_items()` for items listed by a seller
 
 ### Changed
 
 - `CatalogItem.photo` falls back to the main photo from `photos` when `photo` is missing
-
-### Fixed
-
 
 ## [1.1.1] - 2026-10-10
 
@@ -107,7 +115,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD pipeline with GitHub Actions
 - 80%+ test coverage
 
-[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/vlymar1/vinted-api-kit/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/vlymar1/vinted-api-kit/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/vlymar1/vinted-api-kit/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/vlymar1/vinted-api-kit/compare/v1.0.0...v1.0.1
