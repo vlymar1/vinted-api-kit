@@ -28,6 +28,22 @@ def test_catalog_item_deprecated_timestamps(sample_catalog_item_data):
     assert item.raw_timestamp == 0
 
 
+def test_catalog_item_photo_from_photos(sample_catalog_item_data):
+    data = {k: v for k, v in sample_catalog_item_data.items() if k != "photo"}
+    data["photos"] = [
+        {"url": "https://example.com/second.jpg", "is_main": False},
+        {
+            "url": "https://example.com/main.jpg",
+            "is_main": True,
+            "high_resolution": {"timestamp": 1734796339},
+        },
+    ]
+
+    item = CatalogItem(raw_data=data)
+    assert item.photo == "https://example.com/main.jpg"
+    assert item.raw_timestamp == 0
+
+
 def test_catalog_item_without_size(sample_catalog_item_data):
     data = {**sample_catalog_item_data, "item_box": {"first_line": "Nike", "second_line": "Good"}}
 

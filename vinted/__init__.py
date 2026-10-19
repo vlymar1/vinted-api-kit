@@ -11,13 +11,15 @@ from vinted.exceptions import (
     VintedValidationError,
 )
 from vinted.models.item import CatalogItem, DetailedItem
+from vinted.models.seller import Seller
 
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 
 __all__ = [
     "VintedClient",
     "CatalogItem",
     "DetailedItem",
+    "Seller",
     "VintedError",
     "VintedAPIError",
     "VintedAuthError",

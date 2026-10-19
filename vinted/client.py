@@ -11,10 +11,12 @@ from typing import Type, Union
 
 from .api.catalog import CatalogAPI
 from .api.items import ItemsAPI
+from .api.seller import SellerAPI
 from .constants import SortOrder, StorageFormat
 from .exceptions import VintedConfigError
 from .models.config import ClientConfig
 from .models.item import CatalogItem, DetailedItem
+from .models.seller import Seller
 from .session import HttpSession
 from .storage.base import CookieStorage
 from .storage.json import JsonStorage
@@ -28,9 +30,9 @@ logger = logging.getLogger(__name__)
 class VintedClient:
     """High-level client for Vinted operations.
 
-    The client is an async context manager that exposes `search_items`
-    and `item_details`. Cookie persistence is configurable via
-    `persist_cookies` and `storage_format`.
+    The client is an async context manager that exposes `search_items`,
+    `item_details`, `seller_info` and `seller_items`. Cookie persistence
+    is configurable via `persist_cookies` and `storage_format`.
     """
 
     def __init__(
@@ -66,6 +68,7 @@ class VintedClient:
 
         self._catalog = CatalogAPI(self._session)
         self._items = ItemsAPI(self._session)
+        self._seller = SellerAPI(self._session)
 
     def _create_storage(self, config: ClientConfig) -> CookieStorage | None:
         """Return a configured `CookieStorage` instance or None.
@@ -172,6 +175,54 @@ class VintedClient:
             raw_data: When True returns raw dict instead of `DetailedItem`.
         """
         return await self._items.get_details(url=url, raw_data=raw_data)
+
+    async def seller_info(
+        self,
+        url: str,
+        raw_data: bool = False,
+    ) -> Union[Seller, dict]:
+        """Fetch a seller profile.
+
+        Args:
+            url: Seller profile URL (`/member/<id>-<login>`).
+            raw_data: When True returns raw dict instead of `Seller`.
+
+        Returns:
+            A `Seller` instance or the raw user dict when `raw_data`.
+        """
+        return await self._seller.get_info(url=url, raw_data=raw_data)
+
+    async def seller_items(
+        self,
+        url: str,
+        per_page: int = 20,
+        page: int = 1,
+        order: SortOrder | None = None,
+        raw_data: bool = False,
+    ) -> Union[list[CatalogItem], list[dict]]:
+        """Fetch items listed by a seller.
+
+        Only items visible on the Vinted domain of `url` are returned.
+        Vinted currently ignores `newest_first` here and returns the
+        `relevance` order.
+
+        Args:
+            url: Seller profile URL (`/member/<id>-<login>`).
+            per_page: Number of items per page (Vinted caps it at 96).
+            page: Page index.
+            order: Sort order string.
+            raw_data: When True returns raw dicts instead of model objects.
+
+        Returns:
+            A list of `CatalogItem` instances or raw dicts when `raw_data`.
+        """
+        return await self._seller.get_items(
+            url=url,
+            per_page=per_page,
+            page=page,
+            order=order,
+            raw_data=raw_data,
+        )
 
     async def __aenter__(self):
         return self

@@ -6,6 +6,7 @@ import pytest
 from vinted import VintedClient
 from vinted.exceptions import VintedConfigError
 from vinted.models.item import CatalogItem
+from vinted.models.seller import Seller
 
 
 @pytest.mark.asyncio
@@ -17,6 +18,7 @@ async def test_client_initialization(temp_cookies_dir):
     assert client._session is not None
     assert client._catalog is not None
     assert client._items is not None
+    assert client._seller is not None
 
 
 @pytest.mark.asyncio
@@ -26,6 +28,27 @@ async def test_client_search_items(mock_http_response):
             items = await client.search_items(url="https://vinted.com/catalog?search_text=nike")
 
             assert isinstance(items, list)
+            assert len(items) > 0
+            assert isinstance(items[0], CatalogItem)
+
+
+@pytest.mark.asyncio
+async def test_client_seller_info(mock_http_response):
+    mock_http_response.json.return_value = {"user": {"id": 123, "login": "seller"}}
+    with patch("vinted.session.HttpSession.request", return_value=mock_http_response):
+        async with VintedClient() as client:
+            seller = await client.seller_info(url="https://www.vinted.sk/member/123-seller")
+
+            assert isinstance(seller, Seller)
+            assert seller.id == 123
+
+
+@pytest.mark.asyncio
+async def test_client_seller_items(mock_http_response):
+    with patch("vinted.session.HttpSession.request", return_value=mock_http_response):
+        async with VintedClient() as client:
+            items = await client.seller_items(url="https://www.vinted.sk/member/123-seller")
+
             assert len(items) > 0
             assert isinstance(items[0], CatalogItem)
 
