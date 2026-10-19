@@ -18,6 +18,7 @@
 - 🚀 **Asynchronous** - Built with asyncio for high performance
 - 🌍 **Auto-locale Detection** - Automatically detects locale from URL
 - 🔍 **Item Search** - Search catalog with filters, sorting and pagination
+- 👤 **Seller Lookup** - Seller profile and listed items by profile URL
 - 🍪 **Cookie Persistence** - Automatic session management with multiple storage formats
 - 🔐 **Proxy Support** - Simple string-based proxy configuration
 - 📊 **Type Hints** - Full typing support with Literal types for better IDE experience
@@ -133,6 +134,31 @@ raw_items = await client.search_items(
 ### Item Details
 
 > ⚠️ **Deprecated since 1.1.0.** Vinted removed the item details API, so `item_details()` raises `VintedDeprecatedError`.
+
+---
+
+### Seller
+
+> Get a seller profile and the items they list, using the profile URL shared by the site or the app:
+```python
+url = "https://www.vinted.de/member/123456789-username"
+
+seller = await client.seller_info(url)
+print(seller.login, seller.country_code, seller.feedback_count, seller.item_count)
+
+items = await client.seller_items(
+    url,
+    per_page=96,                      # Items per page (Vinted caps it at 96)
+    page=1,
+    order="price_low_to_high"
+)
+```
+
+If you only have the seller id, build the URL yourself: `f"https://www.vinted.de/member/{seller_id}"`.
+
+**Notes:**
+- Only items visible on the Vinted domain of the URL are returned, so the list may be empty on another market.
+- Vinted currently ignores `newest_first` for seller items and returns the `relevance` order.
 
 ### Parameters
 

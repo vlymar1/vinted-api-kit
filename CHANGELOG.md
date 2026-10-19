@@ -9,9 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `VintedClient.seller_info()` and the `Seller` model for seller profiles
+- `VintedClient.seller_items()` for items listed by a seller
 
 ### Changed
 
+- `CatalogItem.photo` falls back to the main photo from `photos` when `photo` is missing
 
 ### Fixed
 

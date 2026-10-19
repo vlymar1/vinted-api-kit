@@ -57,7 +57,11 @@ class CatalogItem:
         self.total_item_price = float(total_item_price.get("amount") or 0.0)
 
         photo = self.raw_data.get("photo") or {}
-        self.photo = photo.get("url", "")
+        # seller items have only `photos`; the deprecated timestamps stay unset
+        main_photo: dict = next(
+            (p for p in self.raw_data.get("photos") or [] if p.get("is_main")), {}
+        )
+        self.photo = photo.get("url") or main_photo.get("url", "")
         self.url = self.raw_data.get("url", "")
         self.created_at_ts = self._parse_created_at(self.raw_data)
 
