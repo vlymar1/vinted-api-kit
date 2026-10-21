@@ -13,20 +13,19 @@
 [![License](https://img.shields.io/pypi/l/vinted-api-kit.svg)](https://github.com/vlymar1/vinted-api-kit/blob/main/LICENSE)
 </div>
 
-## ✨ Features
+## Features
 
-- 🚀 **Asynchronous** - Built with asyncio for high performance
-- 🌍 **Auto-locale Detection** - Automatically detects locale from URL
-- 🔍 **Item Search** - Search catalog with filters, sorting and pagination
-- 👤 **Seller Lookup** - Seller profile and listed items by profile URL
-- 🍪 **Cookie Persistence** - Automatic session management with multiple storage formats
-- 🔐 **Proxy Support** - Simple string-based proxy configuration
-- 📊 **Type Hints** - Full typing support with Literal types for better IDE experience
-- 🎯 **Dataclass Models** - Fast and efficient data models (15% performance boost)
-- 🛡️ **Custom Exceptions** - Detailed error hierarchy for precise error handling
-- 💾 **Flexible Storage** - Choose between pickle, JSON, or Mozilla cookie formats
+- **Asynchronous** - Built with asyncio for high performance
+- **Auto-locale Detection** - Automatically detects locale from URL
+- **Item Search** - Search catalog with filters, sorting and pagination
+- **Seller Lookup** - Seller profile and listed items by profile URL
+- **Cookie Persistence** - Keep sessions between runs in JSON, pickle or Mozilla format
+- **Proxy Support** - Simple string-based proxy configuration
+- **Type Hints** - Full typing support with Literal types for better IDE experience
+- **Dataclass Models** - Fast and efficient data models (15% performance boost)
+- **Custom Exceptions** - Detailed error hierarchy for precise error handling
 
-## 📚 Table of Contents
+## ☰ Table of Contents
 
 - [Installation](#installation)
 - [Usage](#usage)
@@ -36,6 +35,8 @@
 - [License](#license)
 
 ## Installation
+
+Requires Python 3.10+.
 
 Install via pip:
 ```bash
@@ -66,11 +67,22 @@ async def main():
 asyncio.run(main())
 ```
 
+Pass the URL from any supported Vinted domain, the locale is detected from it: `.at`, `.be`, `.co.uk`, `.com`, `.cz`, `.de`, `.dk`, `.es`, `.fi`, `.fr`, `.gr`, `.hr`, `.hu`, `.it`, `.lt`, `.lu`, `.nl`, `.pl`, `.pt`, `.ro`, `.se`, `.sk`.
+
 ---
 
 ### Configuration
 
-#### 🔐 Proxy Support
+#### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `proxy` | `str \| None` | `None` | Proxy string: `"user:pass@host:port"` or `"host:port"` |
+| `cookies_dir` | `Path \| None` | `Path(".")` | Directory for cookie storage |
+| `persist_cookies` | `bool` | `False` | Enable cookie persistence between sessions |
+| `storage_format` | `"json" \| "pickle" \| "mozilla"` | `"json"` | Cookie storage format |
+
+#### Proxy Support
 
 > Use a proxy by passing a simple connection string:
 ```python
@@ -80,7 +92,7 @@ async with VintedClient(
     items = await client.search_items(url)
 ```
 
-#### 💾 Cookie Persistence
+#### Cookie Persistence
 
 > Save cookies between sessions to avoid repeated authentication:
 ```python
@@ -99,12 +111,10 @@ async with VintedClient(
 - **`"pickle"`** - Fastest, Python-native binary format
 - **`"mozilla"`** - Browser-compatible Netscape format
 
-#### 🔍 Search Options
+#### Search Options
 
 > Use type-safe sorting and pagination:
 ```python
-from vinted import SortOrder
-
 items = await client.search_items(
     url="https://www.vinted.de/catalog?brand_ids[]=53",
     per_page=20,                      # Items per page (1-96)
@@ -119,7 +129,7 @@ items = await client.search_items(
 - `price_low_to_high` - Cheapest first
 - `price_high_to_low` - Most expensive first
 
-#### 📦 Raw Data
+#### Raw Data
 
 > Get raw JSON dictionaries instead of parsed models:
 ```python
@@ -128,12 +138,6 @@ raw_items = await client.search_items(
     raw_data=True  # Returns list[dict] instead of list[CatalogItem]
 )
 ```
-
----
-
-### Item Details
-
-> ⚠️ **Deprecated since 1.1.0.** Vinted removed the item details API, so `item_details()` raises `VintedDeprecatedError`.
 
 ---
 
@@ -160,18 +164,20 @@ If you only have the seller id, build the URL yourself: `f"https://www.vinted.de
 - Only items visible on the Vinted domain of the URL are returned, so the list may be empty on another market.
 - Vinted currently ignores `newest_first` for seller items and returns the `relevance` order.
 
-### Parameters
+---
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `proxy` | `str \| None` | `None` | Proxy string: `"user:pass@host:port"` or `"host:port"` |
-| `cookies_dir` | `Path \| None` | `Path(".")` | Directory for cookie storage |
-| `persist_cookies` | `bool` | `False` | Enable cookie persistence between sessions |
-| `storage_format` | `"json" \| "pickle" \| "mozilla"` | `"json"` | Cookie storage format |
+### Item Details
 
-**Storage formats:** `json` (default), `pickle`, `mozilla`. See [Storage Formats](#storage-formats:) for details.
+> ⚠️ **Deprecated since 1.1.0.** Vinted removed the item details API, so `item_details()` raises `VintedDeprecatedError`.
 
+### Models
 
+| Model | Returned by | Fields |
+|-------|-------------|--------|
+| `CatalogItem` | `search_items()`, `seller_items()` | `id`, `title`, `brand_title`, `size_title`, `condition`, `price`, `total_item_price`, `currency`, `photo`, `url` |
+| `Seller` | `seller_info()` | `id`, `login`, `profile_url`, `photo`, `country_code`, `city`, `item_count`, `followers_count`, `feedback_count`, `feedback_reputation`, `last_login`, `is_on_holiday`, `is_business` |
+
+Every model keeps the original API response in `raw_data`.
 
 ### Exception Handling
 ```python
@@ -206,104 +212,13 @@ except VintedAPIError as e:
 
 ---
 ## Migration Guide
-### (v0.x → v1.0)
-### Breaking Changes
 
-If you're upgrading from version 0.x, here are the key changes:
+Upgrading from 0.x to 1.x:
 
-#### 1. Import Path Changed
-```python
-# ❌ Old (v0.x)
-from vinted_api_kit import VintedApi
-
-# ✅ New (v1.0)
-from vinted import VintedClient
-```
-
-#### 2. Class Renamed
-```python
-# ❌ Old
-async with VintedApi() as api:
-    pass
-
-# ✅ New
-async with VintedClient() as client:
-    pass
-```
-
-#### 3. Locale Parameter Removed
-```python
-# ❌ Old (manual locale)
-async with VintedApi(locale="fr") as api:
-    items = await api.search_items(url)
-
-# ✅ New (auto-detected from URL)
-async with VintedClient() as client:
-    items = await client.search_items(url)  # Locale detected from URL
-```
-
-#### 4. Proxy Configuration Changed
-```python
-# ❌ Old (dict format)
-async with VintedApi(
-    proxies={"http": "http://user:pass@proxy:8080"}
-) as api:
-    pass
-
-# ✅ New (simple string)
-async with VintedClient(
-    proxy="user:pass@proxy:8080"  # ← Without "http://"
-) as client:
-    pass
-```
-
-#### 5. New Storage Format Option
-```python
-# ✅ New feature in v1.0
-async with VintedClient(
-    persist_cookies=True,
-    storage_format="json"  # Choose: "json", "pickle", "mozilla"
-) as client:
-    pass
-```
-
-### Quick Migration Checklist
-
-- [ ] Change import: `vinted_api_kit` → `vinted`
-- [ ] Rename class: `VintedApi` → `VintedClient`
-- [ ] Remove `locale` parameter (auto-detected)
-- [ ] Update proxy format: dict → string
-- [ ] Optional: Choose storage format
-
-### Full Example
-
-**Before (v0.x):**
-```python
-from vinted_api_kit import VintedApi
-
-async with VintedApi(
-    locale="fr",
-    proxies={"http": "http://proxy:8080"},
-    persist_cookies=True
-) as api:
-    items = await api.search_items(
-        url="https://www.vinted.fr/catalog?search_text=nike"
-    )
-```
-
-**After (v1.0):**
-```python
-from vinted import VintedClient
-
-async with VintedClient(
-    proxy="proxy:8080",
-    persist_cookies=True,
-    storage_format="pickle"  # New option!
-) as client:
-    items = await client.search_items(
-        url="https://www.vinted.fr/catalog?search_text=nike"
-    )
-```
+- Import: `from vinted_api_kit import VintedApi` → `from vinted import VintedClient`
+- `locale` parameter removed: the locale is detected from the URL
+- Proxy: `proxies={"http": "http://user:pass@host:port"}` → `proxy="user:pass@host:port"`
+- Default cookie storage format is `json` (`pickle` and `mozilla` are also available)
 
 ---
 ## Development
@@ -336,13 +251,13 @@ vinted-api-kit/
 ### Testing
 ```bash
 make test-coverage      # Run tests with coverage
-make test-coverage-view # View coverage report in browser
+make test-coverage-view # Run tests and open coverage report in browser
 ```
 
 ### Code Quality
 ```bash
 make lint-check         # Check code with ruff and mypy
-make lint-reformat      # Format and fix code with ruff
+make format             # Format code with ruff
 ```
 
 ### Cleanup
@@ -362,7 +277,7 @@ make clean              # Remove cache files and build artifacts
 ---
 ## Changelog
 
-See [`CHANGELOG.md`](CHANGELOG.md) for the list of notable changes per version.
+See [`CHANGELOG.md`](https://github.com/vlymar1/vinted-api-kit/blob/main/CHANGELOG.md) for the list of notable changes per version.
 
 ### How to create and maintain changelog?
 
@@ -382,7 +297,7 @@ See [`CHANGELOG.md`](CHANGELOG.md) for the list of notable changes per version.
 ---
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/vlymar1/vinted-api-kit/blob/main/LICENSE) file for details.
 
 _⚠ Disclaimer_
 
