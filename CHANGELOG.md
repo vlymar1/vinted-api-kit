@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Ship `py.typed`, so type checkers use the package's type hints
 
 ## [1.3.0] - 2026-10-21
 
