@@ -1,0 +1,134 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    uses: ./.github/workflows/ci.yaml
+
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+
+      - name: Install hatch and twine
+        run: |
+          python -m pip install --upgrade pip
+          pip install hatch twine
+
+      - name: Check tag matches package version
+        run: |
+          python - <<'EOF'
+          import os
+          import re
+          import tomllib
+
+          tag = os.environ["GITHUB_REF_NAME"].removeprefix("v")
+          project = tomllib.load(open("pyproject.toml", "rb"))["project"]["version"]
+          package = re.search(r'__version__ = "(.+)"', open("vinted/__init__.py").read()).group(1)
+          if not tag == project == package:
+              raise SystemExit(f"tag {tag}, pyproject.toml {project}, vinted/__init__.py {package}")
+          EOF
+
+      - name: Build distribution
+        run: hatch build
+
+      - name: Check distribution
+        run: twine check --strict dist/*
+
+      - name: Store distribution
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-testpypi:
+    name: Publish to TestPyPI
+    needs: [tests, build]
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/vinted-api-kit
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distribution
+        uses: actions/download-artifact@v8
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: publish-testpypi
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/vinted-api-kit
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distribution
+        uses: actions/download-artifact@v8
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: Create GitHub Release
+    needs: publish-pypi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          python - <<'EOF'
+          import os
+          import re
+
+          version = os.environ["GITHUB_REF_NAME"].removeprefix("v")
+          text = open("CHANGELOG.md", encoding="utf-8").read()
+          match = re.search(
+              rf"^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|^\[[^\]]+\]: |\Z)",
+              text,
+              re.DOTALL | re.MULTILINE,
+          )
+          if not match or not match.group(1).strip():
+              raise SystemExit(f"CHANGELOG.md has no section for {version}")
+          with open("release-notes.md", "w", encoding="utf-8") as f:
+              f.write(match.group(1).strip() + "\n")
+          EOF
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md --verify-tag
