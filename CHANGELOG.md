@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+
+## [1.3.1] - 2026-10-21
+
+### Fixed
+
 - Ship `py.typed`, so type checkers use the package's type hints
 
 ## [1.3.0] - 2026-10-21
@@ -126,7 +131,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD pipeline with GitHub Actions
 - 80%+ test coverage
 
-[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/vlymar1/vinted-api-kit/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/vlymar1/vinted-api-kit/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/vlymar1/vinted-api-kit/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/vlymar1/vinted-api-kit/compare/v1.1.0...v1.1.1
