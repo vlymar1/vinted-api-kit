@@ -9,14 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+
+### Changed
+
+
+### Fixed
+
+
+## [1.3.0] - 2026-10-21
+
+### Added
+
 - Python 3.14 and 3.15 support
 
 ### Changed
 
 - `curl-cffi` requirement widened to `>=0.12.0,<0.17.0`
-
-### Fixed
-
 
 ## [1.2.0] - 2026-10-19
 
@@ -117,7 +125,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD pipeline with GitHub Actions
 - 80%+ test coverage
 
-[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/vlymar1/vinted-api-kit/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/vlymar1/vinted-api-kit/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/vlymar1/vinted-api-kit/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/vlymar1/vinted-api-kit/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/vlymar1/vinted-api-kit/compare/v1.0.1...v1.1.0

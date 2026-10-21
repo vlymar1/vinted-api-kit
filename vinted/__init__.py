@@ -13,7 +13,7 @@ from vinted.exceptions import (
 from vinted.models.item import CatalogItem, DetailedItem
 from vinted.models.seller import Seller
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 __all__ = [
     "VintedClient",
