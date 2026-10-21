@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Python 3.14 and 3.15 support
 
 ### Changed
 
+- `curl-cffi` requirement widened to `>=0.12.0,<0.17.0`
 
 ### Fixed
 
